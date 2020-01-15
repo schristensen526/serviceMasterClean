@@ -1,0 +1,18 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId" controller="skedJobCreationController">
+    <aura:attribute name="recordId" type="Id" />
+    <aura:attribute name="jobId" type="Id" />
+    <aura:attribute name="statusMsg" type="String" default="" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+	
+	<center><b>{!v.statusMsg}</b></center>
+    <div aura:id="main" class="toggle"> 
+        <div class="ui-dialog-buttonset" style="text-align:center; line-height: 80px;">
+            <button type="button" onclick="{!c.goToJobDetailPage}"
+                    class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only">Job Detail Page
+            </button>
+            <button type="button" onclick="{!c.onRefreshParent}"
+                    class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only closeBtn">Close
+            </button>
+        </div>
+    </div>
+</aura:component>

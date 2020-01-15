@@ -1,0 +1,26 @@
+<apex:page sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0" cache="false">
+<c:nexpathPage renderQuoteBuilder="true" />
+
+<div id="header">
+</div>
+<div id="content_header">
+    
+</div>
+<div id="content">
+<div id="content_left">
+    <h1>Terms and Conditions</h1>
+    <div style="padding:5px">
+        One area equals any room up to 250 Square feet. Areas above that, such as single kitchen/living room areas may be counted as two rooms. Carpet loose of seams or along walls or concrete floors, or were incorrectly installed are cleaned at the client ’s risk. We assume no  liability for deodorization of carpets exposed to pets. Any concerns relating to our workmanship must be reported within 10 days after completion of work or after that date cleaning may be subject to a service charge.  The customer acknowledges being informed and understands that carpet is damp during and after cleaning. Care should be taken when stepping onto non-carpeted surfaces to avoid slipping. There will be a fee charged for returned cheques. 
+    </div>
+</div>
+<div>
+    <div id="content_middle">
+    </div>
+    <div id="content_right">
+    </div>
+</div><!-- End middle and right -->
+</div><!-- end #content div -->
+<div id="footer">
+
+</div>
+</apex:page>

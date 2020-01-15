@@ -1,0 +1,43 @@
+<apex:component layout="none">
+
+<apex:attribute name="value" type="QuoteBuilder" description="The quote builder controller" required="true"/>
+
+<script>
+//<!-- Do some additional set up for the ServiceMaster namespace - the rest of the code is in JS_QuoteBuilder.component-->
+ServiceMaster.Products = {!value.ProductsJSON};
+ServiceMaster.TimeSlots = {!value.TimeSlotsJSON};
+
+//<!-- MAP PRODUCTS BY ID -->
+//<!-- We use this map later -->
+ServiceMaster.ProductIds = {};
+for(var n in ServiceMaster.Products) {
+    for(var i in ServiceMaster.Products[n]){
+        ServiceMaster.ProductIds[ServiceMaster.Products[n][i].Id] = ServiceMaster.Products[n][i];
+    }
+}
+
+//<!-- Config map, same structure as the apex equivalent -->
+ServiceMaster.ConfigMap = {
+    AREA_RUG_HANDLING_FEE: {!value.ConfigMap['AREA_RUG_HANDLING_FEE']},
+    MINIMUM_CALL_FEE: {!value.ConfigMap['MINIMUM_CALL_FEE']},
+    MINIMUM_CALL_FEE_AREA_RUG: {!value.ConfigMap['MINIMUM_CALL_FEE_AREA_RUG']}
+};
+</script>
+
+<!-- QUERY: The Query string to get ALL products in ALL ProductProductDescribeResults -->
+<c:QuickMap map="{!value.ConfigMap}" key="PRODUCT_QUERY_STRING" value="SELECT Id, Name, RecordType.Name, Type__c, Service__c, Price__c, Quantity__c FROM Product__c ORDER BY Quantity__c ASC"/>
+
+<!-- RUG HANDLING FEE -->
+<c:QuickMap map="{!value.ConfigMap}" key="AREA_RUG_HANDLING_FEE" value="25"/>
+<c:QuickMap map="{!value.ConfigMap}" key="MINIMUM_CALL_FEE" value="130"/>
+<c:QuickMap map="{!value.ConfigMap}" key="MINIMUM_CALL_FEE_AREA_RUG" value="125"/>
+
+<c:QuickMap map="{!value.ConfigMap}" key="TIMESLOT_QUERY_FIELDS" value="Id, Name, MaxBookings__c"/>
+<c:QuickMap map="{!value.ConfigMap}" key="TIMESLOT_ORDER_QUERY_FIELDS" value="id, Date__c"/>
+<c:QuickMap map="{!value.ConfigMap}" key="TIMESLOT_ORDER_QUERY_STATUS_CLAUSE" value="'Scheduled','Confirmed','Complete'"/>
+
+<c:QuickMap map="{!value.ConfigMap}" key="ORDER_QUERY_FIELDS" value="Id, Name, FirstName__c, LastName__c, Email__c, Phone__c, AddressLine1__c, AddressLine2__c, City__c, PriorityStains__c, PetStatus__c, Comments__c, StateProvince__c, Country__c, ZipPostalCode__c, Date__c, TimeSlot__c"/>
+
+<c:QuickMap map="{!value.ConfigMap}" key="COUPON_CODE_QUERY_FIELDS" value="Id, Name, Valid__c, DiscountPercent__c"/>
+
+</apex:component>

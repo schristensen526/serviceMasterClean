@@ -1,0 +1,114 @@
+<apex:page controller="CouponGenerator" sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0">
+<c:nexpathPage renderQuoteBuilder="false"></c:nexpathPage>
+<c:CSS_QuoteBuilder ></c:CSS_QuoteBuilder>
+
+<script>
+$(document).ready(function(){
+
+});
+
+function submitForm(){
+    document.activeElement.blur();
+    af_submit();
+}
+function checksuccess(){
+    if(couponcode != null){
+        $('#content_left').remove();
+        $('#content_middle_right').remove();
+        $('#thankyou_message').show();
+    }
+}
+</script>
+<style>
+/* <!-- On this page, we want to remove the middle section, and switch the sizes of the left and right --> */
+#content_left{
+    width:500px;
+}
+#content_right {
+    width:450px;
+}
+#content_middle{
+    width:5px;
+}
+</style>
+<apex:form >
+
+<apex:actionStatus id="block_status" onstart="$.blockUI();" onstop="$.unblockUI();"></apex:actionStatus>
+<apex:actionFunction name="af_submit" action="{!submit}" status="block_status" rerender="scripts,leadform" oncomplete="checksuccess();"/>
+
+<c:QuickMap map="{!ConfigMap}" key="DEFAULT_DISCOUNT" value="25"></c:QuickMap>
+<apex:outputPanel id="scripts">
+<script>
+var couponcode = {!if(ConfigMap['COUPONCODE'] != 'null', "'" & ConfigMap['COUPONCODE'] & "'",'null')};
+</script>
+</apex:outputPanel>
+
+<div id="header">
+</div>
+<div id="content_header">
+
+</div>
+<div id="content">
+<div id="thankyou_message" style="display:none; margin: 5px;width: 100%;border: 1px solid rgb(255, 230, 100);border-radius: 5px;padding: 5px;color: rgb(150, 126, 0);font-size: 14px;background-color: rgb(255, 250, 225);">
+    <p style="font-weight:bold;font-size:24px">Thank You!</p>
+    Thank you for signing up for a coupon. You will receive an email shortly with your coupon code.<br/>
+    You may redeem it immediately using our online booking system.
+</div>
+<div id="content_left">
+    <apex:outputPanel style="margin:5px" id="leadform">
+        <h1>Enter your information</h1>
+        <apex:pageMessages ></apex:pageMessages>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="qb_form">
+            <tr>
+                <th class="label">
+                    First Name
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!lead.FirstName}" required="true"/>                
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Last Name
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!lead.LastName}"/>                
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Email
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!lead.Email}" required="true"/>                
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    &nbsp;
+                </td>
+                <td>
+                    <input type="button" value="Submit" onclick="submitForm();"/>
+                </td>
+            </tr>
+        </table>
+        <div style="margin: 5px; font-size: 80%; color: #737373;">
+            Any promotional offer obtained though this generator may not be valid with any other discount/promotion or on defined holidays. A minimum Call charge of $99 dollars applies for all appointments. You may be contacted in the future for other promotional materials and offers. 
+        </div>
+    </apex:outputPanel>
+</div><!-- End contentLeft -->
+<div id="content_middle_right">
+    <div id="content_middle">
+        
+    </div>
+    <div id="content_right">
+
+    </div>
+</div><!-- End middle and right -->
+</div><!-- End content -->
+<div id="footer">
+
+</div>
+</apex:form>
+
+</apex:page>

@@ -1,0 +1,211 @@
+<apex:page controller="QuoteBuilder" sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0">
+<c:nexpathPage renderQuoteBuilder="true" />
+<c:QuoteBuilder_required value="{!this}"/>
+<script>
+$(document).ready(function(){
+    //<!-- Attempt to locate the cookies -->
+    ServiceMaster.Cookies.outputCookie();
+});
+</script>
+<style>
+/* on this page - we will force the labels to be a set size */
+.qb_form th.label{
+    width:150px;
+}
+</style>
+<apex:form >
+
+<apex:actionStatus id="block_status" onstart="$.blockUI();" onstop="$.unblockUI();checkSuccess();"></apex:actionStatus>
+<apex:actionFunction name="af_submit" action="{!submit}" status="block_status" reRender="scripts, content_left">
+    <apex:param assignTo="{!SelectedOrderLinesJSON}" value="" name="orderLines"/>
+    <apex:param assignTo="{!ConfigMap['COUPONCODE']}" value="" name="couponCode"/>
+</apex:actionFunction>
+
+<apex:outputPanel id="scripts">
+    <script>
+        var submitMessage = {!IF(submitMessage == null,'null',"'" & submitMessage & "'")};
+        function checkSuccess(){
+            if(submitMessage == 'success'){
+                $('#content_left').remove();
+                $('#content_middle_right').remove();
+                ServiceMaster.Cookies.set('serviceMaster_dateTime','',0);
+                ServiceMaster.Cookies.set('serviceMaster_quote','',0);
+                ServiceMaster.Cookies.set('serviceMaster_couponcode','',0);
+                ServiceMaster.Cookies.set('apex__serviceMaster_orderId','',0);
+                $('#thankyou_message').show();
+            }
+        }
+    </script>
+</apex:outputPanel>
+
+<div id="header">
+</div>
+<div id="content_header">
+    <span id="chevrons">
+        <a class="chevron" href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep1()">Services</a>
+        <a class="chevron" href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep2()">Your Information</a>
+        <a class="chevron " href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep3()">Schedule</a>
+        <a class="chevron active" href="javascript:void(0)">Place Order</a>
+    </span >
+</div>
+<div id="content">
+<div id="thankyou_message" style="display:none; margin: 5px;width: 100%;border: 1px solid rgb(255, 230, 100);border-radius: 5px;padding: 5px;color: rgb(150, 126, 0);font-size: 14px;background-color: rgb(255, 250, 225);">
+    <p style="font-weight:bold;font-size:24px">Thank You!</p>
+    Thank you for choosing ServiceMaster Clean Vancouver. Your order has been booked and you will receive a confirmation email soon. Be advised that it is sometimes necessary to change details of your appointment. If this occurs, you will be contacted either by phone or email to discuss the change.
+</div>
+<div id="content_left">
+    <apex:outputPanel layout="block" style="margin:5px;" id="content_left">
+        <div style="border-radius: 5px; border: 1px solid #2CCB00; display: block; background-color: #E3F9DD; color: #1A7600; padding: 3px;" id="review_message">
+            Please review all the following information to ensure accuracy.<br/>
+            Once you're sure it's correct: click <b>Finish and Submit</b>
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="qb_form output">
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.FirstName__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.FirstName__c}" styleClass="FirstName__c" />                
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.LastName__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.LastName__c}" styleClass="LastName__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.Email__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.Email__c}" styleClass="Email__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.Phone__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.Phone__c}" styleClass="Phone__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.AddressLine1__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.AddressLine1__c}" styleClass="AddressLine1__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.AddressLine2__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.AddressLine2__c}" styleClass="AddressLine2__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.City__c.Label}
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.City__c}" styleClass="City__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Province
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.StateProvince__c}" styleClass="StateProvince__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Postal Code
+                </th>
+                <td class="data">
+                    <apex:outputField value="{!Order.ZipPostalCode__c}" styleClass="ZipPostalCode__c"/>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    &nbsp;
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.PriorityStains__c.inlineHelpText}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.PriorityStains__c}" styleClass="PriorityStains__c" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.PetStatus__c.inlineHelpText}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.PetStatus__c}" styleClass="PetStatus__c" required="true"/>
+                </td>
+            </tr>           
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.Comments__c.inlineHelpText}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.Comments__c}" styleClass="Comments__c"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                &nbsp;
+                </td>
+                <td>
+                    <input type="button" value="Print this page" onclick="window.print()" style="font-size: 12px;"/>
+                </td>
+            </tr>
+        </table>
+        <script>
+            //<!-- On this page - we want to remove all the '--None--' options in the picklists and replace them with '' -->
+            $('option').each(function(){
+                if($(this).html() == '--None--'){
+                    $(this).html(null);
+                }
+            });
+        </script>
+    </apex:outputPanel>
+</div><!-- End contentLeft -->
+<div id="content_middle_right">
+    <div id="content_middle">
+        
+    </div>
+    <div id="content_right">
+        <span class="scheduleContainer" style="display:none">
+            <h1 class="scheduleHeader">Your Date/Time</h1>
+            <apex:outputPanel layout="block" styleClass="schedule summaryInfo">
+                <a href="javascript:void(0)" onclick="ServiceMaster.ChangeSchedule()" class="modifyAction">Edit Date/Time</a>
+                <div class="dateTime"/>
+            </apex:outputPanel>
+        </span>
+        <span class="quoteContainer" style="display:none">
+            <h1 class="quoteHeader">Your Quote</h1>
+            <apex:outputPanel layout="block" styleClass="quote summaryInfo">
+                <div class="messages info" style="display:none"/>
+                <table class="bill">
+                </table>
+            </apex:outputPanel>
+            <input type="button" value="Finish and Submit ►" onclick="ServiceMaster.StepHandler.submit()"/> &nbsp; <a href="javascript:void(0)" onclick="ServiceMaster.EditQuote()" class="modifyAction">Edit Quote</a>
+        </span>
+    </div>
+</div><!-- End middle and right -->
+</div><!-- End content -->
+<div id="footer">
+</div>
+</apex:form>
+
+</apex:page>

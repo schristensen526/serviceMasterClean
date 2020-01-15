@@ -1,0 +1,18 @@
+<apex:component >
+<apex:attribute name="noConflict" type="boolean" default="false" description="If set to true: renders a script tag with a jQuery noConflict call" />
+<apex:attribute name="renderQuoteBuilder" type="boolean" default="false" description="If set to true: renders a the component containing the CSS and JS for the Quote Builder pages" />
+<script>
+//<!-- Add a console if we don't ahve one -->
+if (!window.console) console = function(){};
+</script>
+<apex:includeScript value="{!URLFOR($Resource.nexpath_bundledResources,'jquery-1.11.1.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.nexpath_bundledResources,'jquery.blockUI.js')}"/>
+
+<apex:outputText rendered="{!noConflict}">
+<script>
+$.noConflict();
+</script>
+</apex:outputText>
+<c:JS_QuoteBuilder rendered="{!renderQuoteBuilder}"/>
+<c:CSS_QuoteBuilder rendered="{!renderQuoteBuilder}"/>
+</apex:component>

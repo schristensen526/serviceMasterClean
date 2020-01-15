@@ -1,0 +1,24 @@
+.THIS.toggle {
+    display: none;
+}
+.THIS .ui-button {
+    padding: 0 20px;
+    line-height: 38px;
+    height: 40px;
+    border-radius: 3px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    font-weight: bold;
+    color: #fff;
+    background: #349de3;
+    margin: 0 25px;
+}
+
+.THIS .ui-button.closeBtn {
+    background: #E9F82D;
+    color: #000;
+}
+
+.THIS {
+    padding-top: 4%;
+}

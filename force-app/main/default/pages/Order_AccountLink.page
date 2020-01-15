@@ -1,0 +1,234 @@
+<apex:page standardController="Order__c" extensions="Order_AccountLink">
+<c:nexpathPage ></c:nexpathPage>
+<style>
+.ns{
+    font-style:italic;
+    color:#ccc;
+}
+</style>
+
+<apex:sectionHeader subtitle="Order Account Link" title="Find or create an Account from an Order"/>
+
+<apex:form >
+<apex:actionStatus id="block_status" onstart="$.blockUI();" onstop="$.unblockUI();"/>
+<apex:actionFunction name="af_submitQuery" reRender="contacts" status="block_status">
+    <apex:param assignTo="{!ConfigMap['CONTACT_QUERY']}" name="CONTACT_QUERY" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="af_select" reRender="scripts, msgs" status="block_status" action="{!SelectContact}" oncomplete="ContactQuery.CheckSuccess();">
+    <apex:param assignTo="{!ConfigMap['CONTACT_ID']}" name="CONTACT_ID" value=""/>
+    <apex:param assignTo="{!ConfigMap['ACCOUNT_ID']}" name="ACCOUNT_ID" value=""/>
+</apex:actionFunction>
+<apex:actionFunction name="af_createNew" reRender="scripts, msgs" status="block_status" action="{!CreateContact}" oncomplete="ContactQuery.CheckSuccess();">
+    <apex:param assignTo="{!ConfigMap['NEW_ACCOUNT']}" name="NEW_ACCOUNT" value=""/>
+    <apex:param assignTo="{!ConfigMap['NEW_CONTACT']}" name="NEW_CONTACT" value=""/>
+
+</apex:actionFunction>
+
+
+<apex:pageBlock >
+    <apex:pageMessages id="msgs"></apex:pageMessages>
+    <apex:pageBlockButtons >
+        <apex:commandButton value="Search" onclick="ContactQuery.Search();return false;"/>
+        <apex:commandLink value="Create New Account/Contact" onclick="ContactQuery.CreateNew();return false;"/>
+    </apex:pageBlockButtons>
+    <apex:pageBlockSection collapsible="false" columns="1">
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="{!$ObjectType.Order__c.Fields.FirstName__c.Label}"></apex:outputLabel>
+            <apex:outputPanel >
+                <input type="text" value="{!Order__c.FirstName__c}" class="Order_FirstName__c"/>
+                <span class="ns">Not Searched</span>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="{!$ObjectType.Order__c.Fields.LastName__c.Label}"></apex:outputLabel>
+            <input type="text" value="{!Order__c.LastName__c}" class="Order_LastName__c" />
+            
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="{!$ObjectType.Order__c.Fields.Phone__c.Label}"></apex:outputLabel>
+            <apex:outputPanel >
+                <input type="text" value="{!Order__c.Phone__c}" class="Order_Phone__c"/>
+                <span class="ns">Not Searched</span>
+            </apex:outputPanel>
+
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="{!$ObjectType.Order__c.Fields.Email__c.Label}"></apex:outputLabel>
+            <input type="text" value="{!Order__c.Email__c}" class="Order_Email__c"/>
+
+        </apex:pageBlockSectionItem>
+        <apex:pageBlockSectionItem >
+            <apex:outputLabel value="{!$ObjectType.Order__c.Fields.City__c.Label}"></apex:outputLabel>
+            <apex:outputPanel >
+                <input type="text" value="{!Order__c.City__c}" class="Order_City__c"/>
+                <span class="ns">Not Searched</span>
+            </apex:outputPanel>
+        </apex:pageBlockSectionItem>
+    </apex:pageBlockSection>
+    <apex:outputPanel id="contacts" >
+        <div id="no_results" style="display:none">
+            <apex:pageMessage severity="warning" strength="2" summary="No results"></apex:pageMessage>
+        </div>
+        <apex:variable value="{!0}" var="count"/>
+        <apex:pageBlockTable value="{!Contacts}" var="a" style="display:none" styleClass="contacts_table">
+            <apex:column headerValue="Select">
+                <a href="javascript:ContactQuery.Select('{!a.Id}','{!a.AccountId}')">Select</a>
+                <apex:variable value="{!count + 1}" var="count"/>
+            </apex:column>
+            <apex:column value="{!a.Name}"/>
+            <apex:column value="{!a.AccountId}"/>
+            <apex:column value="{!a.Phone}"/>
+            <apex:column value="{!a.Email}"/>
+            <apex:column headervalue="Address">
+                <apex:outputField value="{!a.MailingStreet}"/><br/>
+                <apex:outputField value="{!a.MailingCity}"/>, <apex:outputField value="{!a.MailingState}"/><br/>
+                <apex:outputField value="{!a.Mailingcountry}"/><br/>
+                <apex:outputField value="{!a.MailingPostalCode}"/>
+            </apex:column>
+        </apex:pageBlockTable>
+        <script>
+            if({!count}){
+                $('.contacts_table').show();
+            } else{
+                $('#no_results').show();
+            }
+        </script>
+    </apex:outputPanel>
+</apex:pageBlock>
+</apex:form>
+<script>
+$(document).ready(function(){
+    ContactQuery.Search();
+});
+var ContactQuery = new function(){
+    var _orderId = '{!Order__c.Id}';
+    this.Search = function(){
+        $('#no_results').hide();
+        var q = getQueryString();
+        if(q != null) {
+            af_submitQuery(q);
+        }
+    }
+    
+    this.Select = function(pId, pAccountId) {
+        af_select(pId,pAccountId);
+    }
+    
+    //<!-- CREATE NEW ACCOUNT AND CONTACT -->
+    //<!-- If the user chooses to create new Account/Contact information, then we can do that here -->
+    this.CreateNew = function(){
+        var fn = getFirstName();
+        var ln = getLastName();
+        var ph = getPhone();
+        var em = getEmail();
+        var ct = getCity();
+        if(fn != null || ln != null || ph != null || em != null || ct != null){
+            var name = ln != null ? ln : null;
+            name = name != null ? name + (fn != null ? ', ' + fn : '') : fn;  
+            var account = {attributes:{type:'Account'},
+                Name : name,
+                Phone : ph,
+                BillingStreet : '{!JSENCODE(Order__c.AddressLine1__c)}' + ('{!JSENCODE(Order__c.AddressLine2__c)}' != '' ? '\n{!JSENCODE(Order__c.AddressLine2__c)}' : ''),
+                BillingCity : '{!JSENCODE(Order__c.City__c)}',
+                BillingState : '{!JSENCODE(Order__c.StateProvince__c)}',
+                BillingCountry : '{!JSENCODE(Order__c.Country__c)}',
+                BillingPostalCode : '{!JSENCODE(Order__c.ZipPostalCode__c)}',
+                ShippingStreet : '{!JSENCODE(Order__c.AddressLine1__c)}' + ('{!JSENCODE(Order__c.AddressLine2__c)}' != '' ? '\n{!JSENCODE(Order__c.AddressLine2__c)}' : ''),
+                ShippingCity : ct,
+                ShippingState : '{!JSENCODE(Order__c.StateProvince__c)}',
+                ShippingCountry : '{!JSENCODE(Order__c.Country__c)}',
+                ShippingPostalCode : '{!JSENCODE(Order__c.ZipPostalCode__c)}'
+            };
+            
+            var contact = {attributes:{type:'Contact'},
+                FirstName : fn,
+                LastName : ln,
+                Phone : ph,
+                Email : em,
+                MailingStreet : '{!JSENCODE(Order__c.AddressLine1__c)}' + ('{!JSENCODE(Order__c.AddressLine2__c)}' != '' ? '\n{!JSENCODE(Order__c.AddressLine2__c)}' : ''),
+                MailingCity : '{!JSENCODE(Order__c.City__c)}',
+                MailingState : '{!JSENCODE(Order__c.StateProvince__c)}',
+                MailingCountry : '{!JSENCODE(Order__c.Country__c)}',
+                MailingPostalCode : '{!JSENCODE(Order__c.ZipPostalCode__c)}',
+                OtherStreet : '{!JSENCODE(Order__c.AddressLine1__c)}' + ('{!JSENCODE(Order__c.AddressLine2__c)}' != '' ? '\n{!JSENCODE(Order__c.AddressLine2__c)}' : ''),
+                OtherCity : ct,
+                OtherState : '{!JSENCODE(Order__c.StateProvince__c)}',
+                OtherCountry : '{!JSENCODE(Order__c.Country__c)}',
+                OtherPostalCode : '{!JSENCODE(Order__c.ZipPostalCode__c)}'
+            };
+            
+            af_createNew(JSON.stringify(account), JSON.stringify(contact));
+        }
+    }
+    
+    var getQueryString = function(){
+        var q = null;
+        var fn = getFirstName();
+        var ln = getLastName();
+//        var ph = getPhone();
+        var em = getEmail();
+//        var ct = getCity();
+        if(fn != null || ln != null || em != null){
+            q = 'SELECT id, Name, AccountId, Account.Name, FirstName, LastName, Email, Phone, MailingStreet, MailingCity, MailingState, MailingPostalCode, MailingCountry FROM Contact';
+            var operator = ' WHERE';
+//            if(fn != null) {
+//                q = q + operator + ' FirstName LIKE \'%' + fn + '%\'';
+//                operator = ' OR';
+//            }
+            if(ln != null) {
+                q = q + operator + ' LastName LIKE \'%' + ln + '%\'';
+                operator = ' OR';
+            }
+//            if(ph != null) {
+//                q = q + operator + ' Phone LIKE \'%' +ph + '%\'';
+//                operator = ' OR';
+//            }
+            if(em != null) {
+                q = q + operator + ' Email = \'' + em + '\'';
+                operator = ' OR';
+            }
+//            if(ct != null) {
+//                q = q + operator + ' MailingCity LIKE \'%' + ct + '%\'';
+//            }
+        }
+        console.log('ContactQuery.getQueryString: returning: ' + q);
+        return q;
+    }
+    
+    //<!-- CHECK THE SUCCESS STATUS -->
+    this.CheckSuccess = function(){
+        if(SELECT_SUCCESS == true) {
+            var retURL = '{!JSENCODE($CurrentPage.parameters.retURL)}';
+            window.top.location = retURL;
+        }
+    }
+    
+    var getFirstName = function(){
+        var v = $('.Order_FirstName__c').val();
+        return v != null && v.trim() != '' ? v.trim() : null;
+    }.bind(this);
+    var getLastName = function(){
+        var v = $('.Order_LastName__c').val();
+        return v != null && v.trim() != '' ? v.trim() : null;
+    }.bind(this);
+    var getPhone = function(){
+        var v = $('.Order_Phone__c').val().replace(/[^0-9]/gi,'').trim();
+        return v != null && v != '' ? v : null; //<!-- replace all non-numbers -->
+    }.bind(this);
+    var getEmail = function(){
+        var v = $('.Order_Email__c').val();
+        return v != null && v.trim() != '' ? v.trim() : null;
+    }.bind(this);
+    var getCity = function(){
+        var v = $('.Order_City__c').val();
+        return v != null && v.trim() != '' ? v.trim() : null;
+    }.bind(this);
+}();
+</script>
+<apex:outputPanel id="scripts">
+<script>
+//<!-- These scripts are re-rendered by action functions to output responses -->
+var SELECT_SUCCESS = {!ConfigMap['SELECT_SUCCESS']};
+</script>
+</apex:outputPanel>
+</apex:page>

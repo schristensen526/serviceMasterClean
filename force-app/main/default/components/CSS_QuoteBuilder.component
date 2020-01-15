@@ -1,0 +1,477 @@
+<apex:component >
+<style>
+body{
+    
+}
+h1 {
+    background-color: #ACC0C6;
+    display: block;
+    padding: 7px;
+    font-size: 18px;
+    color: #FFF;
+    border-bottom: 1px solid #CECECE;
+    margin: 5px;
+    border-radius: 5px;
+    
+}
+#content { 
+    width: 960px;
+    margin: 0 auto;
+    background-color: #fff;
+    display: flex;
+    height: 100%;
+}
+
+#header{
+    background-color: #fff;
+    height: 110px;
+    background-image: url('/resource/1423002129000/nexpath_bundledResources/img/logo.png');
+    background-repeat: no-repeat;
+    background-position: 10px;
+}
+#content_header{
+    width: 960px;
+    margin: 0 auto;
+    background-color: #fff;
+    display: flex;
+    height: 100%;
+}
+
+#content_left {
+    float: left;
+    width: 655px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+#content_middle {
+    float: left;
+    width: 5px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+#content_right {
+    float:right;
+    width:300px;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
+#footer {
+    clear:both;
+    background:#fff;
+}
+
+pre {
+    font-size: 120%;
+}
+
+select {
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    padding: 3px;
+}
+
+a {
+    font-weight: bold;
+    text-decoration: none;
+}
+a:hover{
+    text-decoration: underline;
+}
+
+input {
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    padding: 3px;
+}
+
+input[type="checkbox"] {
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    padding: 3px;
+}
+
+input[type="button"]{
+    background-color: #54C027;
+    display: inline-block;
+    padding: 7px;
+    font-size: 18px;
+    color: #FFF;
+    border-bottom: 1px solid #CECECE;
+    margin: 5px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 7px #D7D7D7;
+}
+input[type="submit"]{
+    background-color: #54C027;
+    display: block;
+    padding: 7px;
+    font-size: 18px;
+    color: #FFF;
+    border-bottom: 1px solid #CECECE;
+    margin: 5px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 7px #D7D7D7;
+}
+
+input[type="button"]:hover{
+    background-color: #81E856;
+    cursor:pointer;
+}
+
+.chevron {
+    background-image: url("{!URLFOR($Resource.nexpath_bundledResources,'/img/chevron-point.png')}");
+    background-color: #ACC0C6;
+    width: 200px;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+    height: 70px;
+    line-height: 70px;
+    background-position: right center;
+    margin: 5px;
+    font-size: 18px;
+    color: #FFF;
+    padding-left: 22px;
+    box-sizing: border-box;
+    border-radius: 5px;
+    display: inline-block;
+}
+.chevron:hover{
+    color: #FFF;
+}
+.chevron.active{
+    background-color: #00A0AF;
+    pointer-events: none;
+}
+.chevron.disabled{
+    background-color: #D7D7D7;
+    pointer-events: none;
+}
+
+.qb_form {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.qb_form th.label{
+    min-width: 20%;
+    margin: 7px 0px 3px 0px;
+    padding: 5px 3px 5px 7px;
+    font-weight: normal;
+    box-sizing: border-box;
+    text-align: right;
+    white-space: normal;
+    color:#868686;
+}
+.qb_form td.data{
+    padding: 5px 3px 5px 7px;
+    margin-bottom:5px;
+    box-sizing: border-box;
+}
+.qb_form.output td.data {
+    font-size: 14px;
+}
+
+/* SF OVERRIDE - required input div that is created on some fields, or if we specify "required=true" */
+.qb_form td.data div.requiredInput{
+    box-sizing: border-box;
+    border-left: 5px solid rgb(226, 49, 49);
+    width: 100%;
+}
+.qb_form td.data div.requiredInput input{
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+
+.qb_form td.data input{
+    width : 100%;
+    height: 34px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    font-size: 16px;
+    padding: 0px 0px 0px 5px;
+    box-sizing: border-box;
+}
+.qb_form td.data select{
+    width : 100%;
+    height: 34px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    font-size: 16px;
+    padding: 0px 0px 0px 5px;
+    box-sizing: border-box;
+}
+.qb_form td.data textarea{
+    width : 100%;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    font-size: 16px;
+    padding: 5px 0px 0px 5px;
+    box-sizing: border-box;
+}
+.qb_form td.data input[type="checkbox"]{
+    width: 16px;
+    height: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    box-shadow: none;
+    font-size: 16px;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.product{
+    width: 410px;
+    display: block;
+    float: left;
+}
+
+.productContainer{
+    width: 655px;
+}
+
+.productInfo{
+    width: 200px;
+    float: left;
+    display: block;
+    border-radius: 5px;
+    border: 1px solid #cecece;
+    padding: 5px;
+    margin: 45px 5px 0px 15px;
+    font-size: 97%;
+}
+.product table{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    background-color: #00A0AF;
+    border-radius: 5px;
+    padding: 5px;
+    display: block;
+    margin: 5px;
+}
+.product tr{
+
+}
+.product td{
+    padding: 5px 10px 5px 10px;
+}
+.product th{
+    padding: 5px 10px 5px 10px;
+}
+.product label{
+    width: 100%;
+    display: inline-block;
+    color: white;
+}
+.product a{
+    color: #ACC0C6;
+}
+.product a:hover{
+    color: #ACC0C6 !important;
+}
+
+a.containerCollapse {
+    color: #fff;
+    float:right;
+}
+a.containerCollapse:hover {
+    color: #fff !important;
+}
+    
+    
+.product td.fineprint{
+    font-size: 11px;
+    color: #CDCDCD;
+}
+
+.right-align{
+    text-align: right;
+}
+
+.summaryInfo { 
+    border: 1px solid #cecece;
+    border-radius: 5px;
+    margin: 4px 5px 3px 0px;
+    padding: 5px;
+    margin: 5px 5px 5px 5px;
+}
+.summaryInfo .modifyAction{
+    margin: 0px 0px 5px 0px;
+    display: block;
+}
+
+.quote .header {
+    background-color: #ACC0C6;
+    display: block;
+    padding: 5px;
+    font-size: 24px;
+    color: #fff;
+}
+
+.messages{
+    background-color: #FFFEE7;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 5px 0px 5px 0px;
+    padding: 7px;
+}
+.messages.info{
+    border-color:#568BFF;
+    color: #568BFF;
+}
+.messages.error{
+    border-color:rgb(226,0,0);
+    color:rgb(226,0,0);
+}
+
+.quote .subtotalrow{
+    background-color: #FFFDE4;
+}
+.quote .bill{
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+.quote .bill td{
+    padding: 5px;
+}
+.quote .bill .productrow{
+    background-color: #F7F7F7;
+}
+.bold {
+    font-weight:bold;
+}
+.dollar {
+    display: inline-block;
+    width: 100%;
+    text-align: right;
+}
+.quote .sectionrow{
+    background-color: #EDEDED;
+    font-weight: bold;
+}
+.quote .totalrow{
+    background-color: #ACC0C6;
+    font-size: 120%;
+}
+
+
+/****************** SCHEDULE CALENDAR *******************/
+#schedule{
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    Table-layout: fixed;
+}
+#schedule tr{
+    
+}
+#schedule td{
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+    Table-layout: fixed;
+    box-sizing: border-box;
+    height: 60px;
+    text-align: center;
+}
+#schedule th{
+    
+}
+#schedule td.label{
+    background-color: #FFF9DC;
+    font-weight: bold;
+}
+#schedule td.available{
+    background-color: #D6FFBF;
+}
+#schedule td.notavailable{
+    background-color: #F7F7F7;
+}
+#schedule td input[type="radio"]{
+    width: 25px;
+    height: 25px;
+}
+
+#schedule .title{
+    background-color: #EDEDED;
+    padding: 7px;
+    font-size: 18px;
+    border-bottom: 1px solid #CECECE;
+    margin: 5px;
+    font-weight: bold;
+}
+
+#schedule .week{
+    color: #6C6C6C;
+    font-size: 46px;
+}
+#schedule .week:hover{
+    text-decoration:none;
+    color:rgb(179, 179, 179);
+}
+#couponcode{
+    margin-top: 5px;
+}
+
+input[type="button"].couponcode{
+    font-size: 12px;
+    margin: 5px 0px 0px 0px;
+}
+
+
+/* PRINTABLE CLASSES */
+/* When the user wants to print the final page - we will make the css a bit more print friendly */
+@media print {
+    #content{
+        width:100%;
+        border:0;
+    }
+    #content_header {
+        display:none;
+    }
+    #header{
+        display:none;
+    }
+    #footer{
+        display:none;
+    }
+    input[type="button"]{
+        display:none;
+    }
+    .modifyAction {
+        display:none !important;
+    }
+    #review_message {
+        display:none !important;
+    }
+
+    select,textarea{
+        border:0px !important;
+        -webkit-box-shadow: none !important;
+        box-shadow: none !important;
+        font-size:14px !important;
+        width: auto !important;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    div.requiredInput{
+        border:0px !important;
+    }
+    div.errorMsg{
+        display:none !important;
+    }
+}
+</style>
+</apex:component>

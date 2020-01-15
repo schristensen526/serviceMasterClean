@@ -1,0 +1,68 @@
+<apex:page standardController="Account" showChat="false" showHeader="false" sidebar="false" standardStylesheets="false" >
+<apex:outputText rendered="false">
+{!Account.Id}
+{!Account.Name}
+{!Account.BillingStreet}
+{!Account.BillingCity}
+{!Account.BillingState}
+{!Account.BillingPostalCode}
+{!Account.BillingCountry}
+{!Account.Phone}
+</apex:outputText>
+<script>
+//<!-- PRODUCTION FIELDS -->
+//<!-- These are the field ids in the PRODUCTION ENVIRONMENT - these will NOT work in the sandbox you -->
+//<!-- will need to comment this out and make a new varialbe with the sandbox ids -->
+var OrderFields = {
+    FirstName__c : '00N1200000ApOTn',
+    LastName__c : '00N1200000ApOTo',
+    Email__c : '00N1200000ApOTm',
+    Phone__c : '00N1200000ApOTr',
+    AddressLine1__c : '00N1200000ApOTd',
+    AddressLine2__c : '00N1200000ApOTe',
+    City__c : '00N1200000ApOTg',
+    StateProvince__c : '00N1200000ApOTt',
+    ZipPostalCode__c : '00N1200000ApOTw',
+    Country__c : '00N1200000ApOTj',
+    Account__c : 'CF00N1200000ApOTc_lkid', //<!-- id input -->
+    Account__cName : 'CF00N1200000ApOTc', //<!-- name input -->
+    Contact__c : 'CF00N1200000ApOTi_lkid', //<!-- id input -->
+    Contact__cName : 'CF00N1200000ApOTi' //<!-- name input -->
+};
+
+//<!-- ACCOUNT -->
+//<!-- The account information we are coming from -->
+var Account = {
+    Id :'{!Account.Id}',
+    Name : '{!JSENCODE(Account.Name)}',
+    BillingStreet : '{!JSENCODE(Account.BillingStreet)}',
+    BillingCity : '{!JSENCODE(Account.BillingCity)}',
+    BillingState : '{!JSENCODE(Account.BillingState)}',
+    BillingPostalCode : '{!JSENCODE(Account.BillingPostalCode)}',
+    BillingCountry : '{!JSENCODE(Account.BillingCountry)}',
+    Phone : '{!JSENCODE(Account.Phone)}'
+};
+
+//<!-- BUILD URL -->
+//<!-- This function takes the account information and constructs a URL to pre-populate order fields with it -->
+function getURL(){
+    //var url = '/a0q/e?retURL=%2F' + Account.Id;
+    var url = '{!URLFOR($Action.Order__c.New, $ObjectType.Order__c, [retURL="/" & Account.Id])}';
+    url += '&' + OrderFields.Phone__c + '=' + (Account.Phone || '');
+    //<!-- The address on account is a textarea - so it has multiple lines - take the first line -->
+    url += '&' + OrderFields.AddressLine1__c + '=' + (Account.BillingStreet.split('\n')[0] || '');
+    //<!-- ... and take the second line - that's all we don't support 3rd line -->
+    url += '&' + OrderFields.AddressLine2__c + '=' + (Account.BillingStreet.split('\n')[1] || ''); 
+    url += '&' + OrderFields.City__c + '=' + (Account.BillingCity || '');
+    url += '&' + OrderFields.StateProvince__c + '=' + (Account.BillingState || '');
+    url += '&' + OrderFields.ZipPostalCode__c + '=' + (Account.BillingPostalCode || '');
+    url += '&' + OrderFields.Country__c + '=' + (Account.BillingCountry || '');
+    url += '&' + OrderFields.Account__c + '=' + (Account.Id || '');
+    url += '&' + OrderFields.Account__cName + '=' + (Account.Name || '');
+    return url;
+}
+
+//alert(getURL());
+window.top.location = getURL();
+</script>
+</apex:page>

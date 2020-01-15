@@ -1,0 +1,126 @@
+<apex:page showHeader="false" standardStylesheets="false" sidebar="false" standardController="Order__c" extensions="skedRecurringJobCreationController" showQuickActionVfHeader="false">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
+  <script src="//cdnjs.cloudflare.com/ajax/libs/core-js/2.5.1/core.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/bluebird/3.5.0/bluebird.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+  <script src="/canvas/sdk/js/publisher.js"></script>
+  <apex:includeScript value="/support/console/39.0/integration.js"/>
+  <style>
+    [v-cloak] {display: none}
+    html body.sfdcBody {
+      padding: 0;
+    }
+  </style>
+  <div id="app"></div>
+  <script>
+    window.__APP__ = {
+      mainComponent: "Sc5",
+      config: {
+        selector: '#app',
+        renderOnLoad: true,
+        minWidth: 400,
+        dateFormatMoment: 'MM/DD/YYYY', // for moment
+        dateFormat: 'mm/dd/yy', // for jquery
+        // PDEngagementId: "{!$CurrentPage.parameters.PDEngagementId}",
+        // RACPageUrl: "/apex/skedRAC"
+        orderId: "{!$CurrentPage.parameters.id}",
+      },
+      API: {
+        updateForm: function (valid, data) {
+          console.log('valid:', valid);
+          console.log('data:', data);
+          //console.log('parent', parent, parent.updateForm);
+          //if (parent && parent.updateForm) {
+          //  parent.updateForm(valid, data);
+          //}
+          var message = {
+            type: 'skedRecurringJobCreation',
+            data: {
+              valid: valid,
+              data: data,
+            },
+          };
+          parent.postMessage(JSON.stringify(message), '*');
+        },
+        enableSave: function (flag) {
+          console.log('enable save');
+          Sfdc.canvas.publisher.publish({name:"publisher.setValidForSubmit", payload: (flag ? 'true': 'false')});
+        },
+        closeMe: function (refresh) {
+          console.log('enable save');
+          Sfdc.canvas.publisher.publish({ name: "publisher.close", payload:{ refresh: (refresh ? 'true': 'false') }});
+        },
+        doSave: function () {
+          // this will be overrided in vue app
+          // console.log('doSave', this.data);
+          // this.request('doSave', this.data).then(function (data) {
+          //   console.log('callback data', data);
+          // });
+        },
+        data: null,
+        generateRecurringScheduleLink: function (item) {
+          return 'https://new.skedulo.com/recurringSchedule/' + item.id;
+        },
+        generateRecurringJobLink: function (item) {
+          return 'https://new.skedulo.com/jobdetails/' + item.id;
+        },
+        linkTarget: '_blank',
+        apexCtrl: 'skedRecurringJobCreationController',
+        request: function (methodName, params, mockData) {
+          console.log(new Date, 'API.request', methodName, params, mockData);
+          var callback,
+              options = { buffer: true, escape: false, timeout: 30000 },
+              args = [this.apexCtrl + '.' + methodName];
+
+          return new Promise(function (resolve, reject) {
+            if (mockData) {
+              setTimeout(function () {
+                if (mockData) {
+                  resolve(mockData);
+                } else {
+                  reject(mockData);
+                }
+              }, 100)
+
+            } else if (Visualforce && Visualforce.remoting && $VFRM && $VFRM.Manager) {
+              callback = function(result, event) {
+                console.log(new Date, methodName, 'results: ', result, event);
+                if (event.statusCode === 200 && result) {
+                  if (result) {
+                    console.log(1);
+                    resolve(result)
+                  } else {
+                    console.log(2);
+                    reject(result);
+                  }
+                } else if (event.message) {
+                  console.log(3);
+                  reject({ success: false, errorMessage: event.message });
+                }
+              }
+              args = args.concat(params, callback, options)
+              Visualforce.remoting.Manager.invokeAction.apply($VFRM.Manager, args);
+            }
+          });
+        },
+      }
+    };
+    
+    Sfdc.canvas.publisher.subscribe({
+        name: "publisher.showPanel",
+        onData:function(e) {
+          console.log('Modal is open', e);
+          __APP__.API.enableSave(); // maybe after form validation
+        }
+    });
+    Sfdc.canvas.publisher.subscribe({
+        name: "publisher.post",
+        onData: function(e) {
+          console.log('Save button is clicked', e);
+          __APP__.API.doSave();
+          // __APP__.API.closeMe();
+        }
+    });
+  </script>
+  <script src="{!URLFOR($Resource.skedRecurringJobCreation, 'build.js')}"></script>
+</apex:page>

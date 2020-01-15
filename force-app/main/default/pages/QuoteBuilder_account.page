@@ -1,0 +1,151 @@
+<apex:page controller="QuoteBuilder" sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0">
+<c:nexpathPage renderQuoteBuilder="true" />
+<c:QuoteBuilder_required value="{!this}"></c:QuoteBuilder_required>
+<script>
+$(document).ready(function(){
+    //<!-- Attempt to locate the cookies -->
+    ServiceMaster.Cookies.outputCookie();
+});
+</script>
+<style>
+
+</style>
+<apex:form >
+<apex:actionStatus id="block_status" onstart="$.blockUI();document.activeElement.blur();" onstop="$.unblockUI();"></apex:actionStatus>
+<apex:actionFunction name="af_toStep3" reRender="accountInput" action="{!toSchedule}" status="block_status"></apex:actionFunction>
+<apex:actionFunction name="af_getCouponCode" namespace="ServiceMaster" reRender="scripts" status="block_status" oncomplete="ServiceMaster.CouponCode.applyAfter()">
+    <apex:param value="" name="CouponCode" assignTo="{!ConfigMap['COUPONCODE']}"/>
+</apex:actionFunction>
+
+<apex:outputPanel id="scripts">
+<script>
+ServiceMaster.CouponCode.message = {!IF(CouponCodeJSON == null,"null",CouponCodeJSON)};
+</script>
+</apex:outputPanel>
+
+<div id="header">
+</div>
+<div id="content_header">
+    <span id="chevrons">
+        <a class="chevron" href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep1()">Services</a>
+        <a class="chevron active" href="javascript:void(0)">Your Information</a>
+        <a class="chevron disabled" href="javascript:void(0)">Schedule</a>
+        <a class="chevron disabled" href="javascript:void(0)">Place Order</a>
+    </span >
+    <script>
+        
+    </script>
+</div>
+<div id="content">
+<div id="content_left">
+    <apex:outputPanel id="accountInput">
+        <h1>Enter your information</h1>
+        <apex:pageMessages ></apex:pageMessages>
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" class="qb_form">
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.FirstName__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.FirstName__c}" styleClass="FirstName__c" required="true" />                
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.LastName__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.LastName__c}" styleClass="LastName__c" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.Email__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.Email__c}" styleClass="Email__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.Phone__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.Phone__c}" styleClass="Phone__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.AddressLine1__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.AddressLine1__c}" styleClass="AddressLine1__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.AddressLine2__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.AddressLine2__c}" styleClass="AddressLine2__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    {!$ObjectType.Order__c.Fields.City__c.Label}
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.City__c}" styleClass="City__c"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Province
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.StateProvince__c}" styleClass="StateProvince__c" required="true"/>
+                </td>
+            </tr>
+            <tr>
+                <th class="label">
+                    Postal Code
+                </th>
+                <td class="data">
+                    <apex:inputField value="{!Order.ZipPostalCode__c}" styleClass="ZipPostalCode__c"/>
+                </td>
+            </tr>
+        </table>
+    </apex:outputPanel>
+</div><!-- End contentLeft -->
+<div>
+    <div id="content_middle">
+        
+    </div>
+    <div id="content_right">
+        <span class="scheduleContainer" style="display:none">
+            <h1 class="scheduleHeader">Your Date/Time</h1>
+            <apex:outputPanel layout="block" styleClass="schedule summaryInfo">
+                <a href="javascript:void(0)" onclick="ServiceMaster.ChangeSchedule()" class="modifyAction">Edit Date/Time</a>
+                <div class="dateTime"/>
+            </apex:outputPanel>
+        </span>
+        <span class="quoteContainer" style="display:none">
+            <h1 class="quoteHeader">Your Quote</h1>
+            <apex:outputPanel layout="block" styleClass="quote summaryInfo">
+                
+                <div class="messages info" style="display:none"/>
+                <table class="bill">
+                </table>
+                <input type="text" id="couponcode" placeholder="Coupon Code" onkeypress="if(event.keyCode == 13){event.preventDefault();ServiceMaster.CouponCode.apply();}"/> <input type="button" class="couponcode" value="Apply" onclick="ServiceMaster.CouponCode.apply()"/>
+            </apex:outputPanel>
+            <input type="button" value="Continue ►" onclick="ServiceMaster.StepHandler.toStep3()"/> &nbsp; <a href="javascript:void(0)" onclick="ServiceMaster.EditQuote()" class="modifyAction">Edit Quote</a>
+        </span>
+    </div>
+</div><!-- End middle and right -->
+</div><!-- End content -->
+<div id="footer">
+
+</div>
+</apex:form>
+
+</apex:page>

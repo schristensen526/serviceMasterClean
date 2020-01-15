@@ -1,0 +1,7 @@
+<apex:component >
+
+<apex:attribute name="map" type="map" description="The map property to store the values against" required="true"/>
+<apex:attribute name="key" type="string" description="The map key to assign the value against" required="true"/>
+<apex:attribute name="value" type="string" assignTo="{!map[key]}" description="The value of the map entry"/>
+
+</apex:component>

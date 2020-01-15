@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ApexPage xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>40.0</apiVersion>
+    <availableInTouch>true</availableInTouch>
+    <confirmationTokenRequired>false</confirmationTokenRequired>
+    <label>Conversation Job</label>
+    <packageVersions>
+        <majorNumber>102</majorNumber>
+        <minorNumber>43</minorNumber>
+        <namespace>sked</namespace>
+    </packageVersions>
+</ApexPage>

@@ -1,0 +1,99 @@
+<apex:page controller="QuoteBuilder" sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0">
+<c:nexpathPage renderQuoteBuilder="true" />
+<c:QuoteBuilder_required value="{!this}"/>
+<script>
+$(document).ready(function(){
+    //<!-- Attempt to locate the cookies -->
+    ServiceMaster.Cookies.outputCookie();
+});
+</script>
+<apex:form >
+
+<apex:actionStatus id="block_status" onstart="$.blockUI();" onstop="$.unblockUI();"></apex:actionStatus>
+<apex:actionFunction name="af_setDateTime" action="{!setDateTime}" status="block_status" reRender="none">
+    <apex:param value="" assignTo="{!ConfigMap['SELECTED_TIMESLOT_ID']}" name="Selected_TimeSlot_Id"/>
+    <apex:param value="" assignTo="{!ConfigMap['SELECTED_DATE']}" name="Selected_Date"/>
+</apex:actionFunction>
+<apex:actionFunction name="af_getCouponCode" namespace="ServiceMaster" reRender="scripts" status="block_status" oncomplete="ServiceMaster.CouponCode.applyAfter()">
+    <apex:param value="" name="CouponCode" assignTo="{!ConfigMap['COUPONCODE']}"/>
+</apex:actionFunction>
+
+<apex:outputPanel id="scripts">
+<script>
+ServiceMaster.CouponCode.message = {!IF(CouponCodeJSON == null,"null",CouponCodeJSON)};
+</script>
+</apex:outputPanel>
+
+<div id="header">
+</div>
+<div id="content_header">
+    <span id="chevrons">
+        <a class="chevron" href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep1()">Services</a>
+        <a class="chevron" href="javascript:void(0)" onclick="ServiceMaster.StepHandler.toStep2()">Your Information</a>
+        <a class="chevron active" href="javascript:void(0)">Schedule</a>
+        <a class="chevron disabled" href="javascript:void(0)">Place Order</a>
+    </span >
+    <script>
+        
+    </script>
+</div>
+<div id="content">
+<div id="content_left">
+<style>
+
+</style>
+<script>
+
+</script>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" id="schedule">
+        <tr>
+            <td>
+                <a href="javascript:void(0)" class="week" title="Previous week">◄</a>
+            </td>
+            <td colspan="6" class="title">
+                Desired Arrival Window
+            </td>
+            <td>
+                <a href="javascript:void(0)" class="week" title="Next week">►</a>
+            </td>
+        </tr>
+        <tr>
+ 
+        </tr>
+        <tr class="timeslot">
+            <!-- This will be populated via JS -->
+        </tr>
+    </table>
+    <script>var schedule = new ServiceMaster.Schedule({element:$('#schedule')});</script>
+</div><!-- End contentLeft -->
+<div>
+    <div id="content_middle">
+        
+    </div>
+    <div id="content_right">
+        <span class="scheduleContainer" style="display:none">
+            <h1 class="scheduleHeader">Your Date/Time</h1>
+            <apex:outputPanel layout="block" styleClass="schedule summaryInfo">
+                <a href="javascript:void(0)" onclick="ServiceMaster.ChangeSchedule()" class="modifyAction">Edit Date/Time</a>
+                <div class="dateTime"/>
+            </apex:outputPanel>
+        </span>
+        <span class="quoteContainer" style="display:none">
+            <h1 class="quoteHeader">Your Quote</h1>
+            <apex:outputPanel layout="block" styleClass="quote summaryInfo">
+                <div class="messages info" style="display:none"/>
+                <table class="bill">
+                </table>
+                <input type="text" id="couponcode" placeholder="Coupon Code" onkeypress="if(event.keyCode == 13) {event.preventDefault();ServiceMaster.CouponCode.apply();}"/> <input type="button" class="couponcode" value="Apply" onclick="ServiceMaster.CouponCode.apply()"/>
+            </apex:outputPanel>
+            <input type="button" value="Continue ►" onclick="ServiceMaster.StepHandler.toStep4()"/> &nbsp; <a href="javascript:void(0)" onclick="ServiceMaster.EditQuote()" class="modifyAction">Edit Quote</a>
+        </span>
+    </div>
+</div><!-- End middle and right -->
+</div><!-- End content -->
+<div id="footer">
+
+</div>
+</apex:form>
+
+</apex:page>

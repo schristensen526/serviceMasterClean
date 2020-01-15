@@ -1,0 +1,929 @@
+<apex:page controller="QuoteBuilder" sidebar="false" showHeader="false" standardStylesheets="true" docType="HTML-5.0" cache="false">
+
+<c:nexpathPage renderQuoteBuilder="true" />
+<c:QuoteBuilder_required value="{!this}"/>
+<style>
+
+</style>
+<script>
+$(document).ready(function(){
+    //<!-- Attempt to locate the cookies -->
+    ServiceMaster.Cookies.outputCookie();
+    //ServiceMaster.QuoteCalculator.output();
+});
+    
+ServiceMaster.ExpandContract = function(pElement, pTargetElement){
+    var _txt = pElement.html();
+    console.log(_txt);
+    
+    if(_txt == '+ Expand'){
+        pTargetElement.show();
+        pElement.html(null);
+        pElement.html('- Contract');
+    } else {
+        pTargetElement.hide();
+        pElement.html(null);
+        pElement.html('+ Expand');
+    }
+}
+
+
+
+//<!-- GET SYSTEMIZED STRING -->
+//<!-- A function that mimics the apex class: utilities.SystemizeString -->
+//<!-- so that we can find input elements by their class -->
+//function systemizeString(p){
+//    var s = p != null ? p : '';
+//    s = s.trim().replace(new RegExp('\\s{2,}','ig'),' '); //Trim and remove duplicate whitespaces with a single space
+//    s = s.replace(new RegExp('[^A-z^0-9^\\s]','ig'),''); //Replace everything that is not a letter or a number and not a whitespace with BLANK
+//    s = s.trim().replace(new RegExp('\\s','ig'),'_').toUpperCase(); //Trim again, and replace whitespaces with underscores and uppercase the whole thing
+//    return s;
+//}
+</script>
+
+
+<apex:form >
+<apex:actionStatus id="block_status" onstart="$.blockUI();" onstop="$.unblockUI();" />
+<apex:actionFunction name="af_getCouponCode" namespace="ServiceMaster" reRender="scripts" status="block_status" oncomplete="ServiceMaster.CouponCode.applyAfter()">
+    <apex:param value="" name="CouponCode" assignTo="{!ConfigMap['COUPONCODE']}"/>
+</apex:actionFunction>
+
+<apex:outputPanel id="scripts">
+<script>
+ServiceMaster.CouponCode.message = {!IF(CouponCodeJSON == null,"null",CouponCodeJSON)};
+</script>
+</apex:outputPanel>
+
+<div id="header">
+</div>
+<div id="content_header">
+    <span id="chevrons">
+        <a class="chevron active" href="javascript:void(0)">Services</a>
+        <a class="chevron disabled" href="javascript:void(0)">Your Information</a>
+        <a class="chevron disabled" href="javascript:void(0)">Schedule</a>
+        <a class="chevron disabled" href="javascript:void(0)">Place Order</a>
+    </span >
+    <script>
+        
+    </script>
+</div>
+<div id="content">
+<div id="content_left">
+    <div class="productContainer">
+        <div class="product">
+        <h1>Carpet Cleaning Services <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.CarpetCleaningProducts'));" >- Contract</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" id="carpetCleaning" class="CarpetCleaningProducts">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Clean</label>
+                </th>
+                <th>
+                    <label>3M Scotchguard &#8482;</label>
+                </th>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Room</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_CLEAN_ROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_CLEAN_ROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_CLEAN_ROOM"] = new ServiceMaster.Product({config:'CARPET_CLEANING_CLEAN_ROOM',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_PROTECT_ROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_PROTECT_ROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_PROTECT_ROOM"] = new ServiceMaster.Product({config:'CARPET_CLEANING_PROTECT_ROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Staircase</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_CLEAN_STAIRS" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_CLEAN_STAIRS']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_CLEAN_STAIRS"] = new ServiceMaster.Product({config:'CARPET_CLEANING_CLEAN_STAIRS',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_PROTECT_STAIRS" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_PROTECT_STAIRS']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_PROTECT_STAIRS"] = new ServiceMaster.Product({config:'CARPET_CLEANING_PROTECT_STAIRS',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Entry/Hallway</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_CLEAN_ENTRYWAY" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_CLEAN_ENTRYWAY']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_CLEAN_ENTRYWAY"] = new ServiceMaster.Product({config:'CARPET_CLEANING_CLEAN_ENTRYWAY',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_PROTECT_ENTRYWAY" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_PROTECT_ENTRYWAY']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_PROTECT_ENTRYWAY"] = new ServiceMaster.Product({config:'CARPET_CLEANING_PROTECT_ENTRYWAY',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Bath/Laundry room</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_CLEAN_BATHROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_CLEAN_BATHROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_CLEAN_BATHROOM"] = new ServiceMaster.Product({config:'CARPET_CLEANING_CLEAN_BATHROOM',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="CARPET_CLEANING_PROTECT_BATHROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['CARPET_CLEANING_PROTECT_BATHROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["CARPET_CLEANING_PROTECT_BATHROOM"] = new ServiceMaster.Product({config:'CARPET_CLEANING_PROTECT_BATHROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="fineprint">
+                    A room consists of an area under 250 square feet. <a href="{!$Page.QuoteBuilder_TermsConditions}?t=c" target="_blank">Terms and Conditions</a> apply.
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div class="productInfo CarpetCleaningProducts">
+            • Online booking is not available for next business day appointments. For urgent inquiries, please contact the office at (604)435-1135 
+            <br/><br/>
+            • Scotchgard is a non-toxic protective sealant sprayed on carpet, which beads liquids and prevents them from being absorbed by the fibers where they can stain.
+            <br/><br/>
+            • One Staircase include 13 steps, which is standard for most homes and apartments.
+        </div>
+    </div>
+    
+    <div class="productContainer">
+        <div class="product">
+        <h1>Furniture Cleaning Services <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.FurnitureCleaningProducts'));" >+ Expand</a></h1> 
+        <table cellpadding="0" cellspacing="0" border="0" id="furnitureCleaningSvc" class="FurnitureCleaningProducts" style="display:none">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Clean</label>
+                </th>
+                <th>
+                    <label>Specialty Clean</label>
+                </th>
+                <th>
+                    <label>3M Scotchguard &#8482;</label>
+                </th>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Loveseat</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_LOVESEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_LOVESEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_LOVESEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_LOVESEAT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_LOVESEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_LOVESEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_LOVESEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_LOVESEAT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_PROTECT_LOVESEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_PROTECT_LOVESEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_PROTECT_LOVESEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_PROTECT_LOVESEAT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Sofa</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_SOFA" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_SOFA']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_SOFA"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_SOFA',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_SOFA" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_SOFA']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_SOFA"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_SOFA',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_PROTECT_SOFA" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_PROTECT_SOFA']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_PROTECT_SOFA"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_PROTECT_SOFA',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Chair</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_CHAIR" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_CHAIR']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_CHAIR"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_CHAIR',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_CHAIR" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_CHAIR']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_CHAIR"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_CHAIR',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_PROTECT_CHAIR" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_PROTECT_CHAIR']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_PROTECT_CHAIR"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_PROTECT_CHAIR',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Ottoman</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_OTTOMAN" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_OTTOMAN']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_OTTOMAN"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_OTTOMAN',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_OTTOMAN" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_OTTOMAN']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_OTTOMAN"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_OTTOMAN',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_PROTECT_OTTOMAN" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_PROTECT_OTTOMAN']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_PROTECT_OTTOMAN"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_PROTECT_OTTOMAN',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">Dining Seat</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_DINING_SEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_DINING_SEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_DINING_SEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_DINING_SEAT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_DINING_SEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_DINING_SEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_DINING_SEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_DINING_SEAT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_PROTECT_DINING_SEAT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_PROTECT_DINING_SEAT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_PROTECT_DINING_SEAT"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_PROTECT_DINING_SEAT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label class="right-align">5 Seat Sectional</label>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_CLEAN_5_SEAT_SECTIONAL" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_CLEAN_5_SEAT_SECTIONAL']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_CLEAN_5_SEAT_SECTIONAL"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_CLEAN_5_SEAT_SECTIONAL',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL"] = new ServiceMaster.Product({config:'FURNITURE_CLEANING_SPECIALTY_CLEAN_5_SEAT_SECTIONAL',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4" class="fineprint" style="display:none">
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure <a href="javascript:void(0)">dolor in reprehenderit in voluptate</a> velit esse cillum dolore eu fugiat nulla pariatur.
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div class="productInfo FurnitureCleaningProducts" style="display:none">
+            • Different furniture fabrics require different cleanings. Some require more time and effort to clean properly. To determine the correct fabric, Almost all major pieces of of furniture sold in Canada will have a white tag that lists fabric’s composition. Regular cleaning fabrics are synthetic or cotton fibres. Specialty clean fabrics include microfiber, velvet, Hatian cotton, jacquard, moiré, satin, silk, wool, leather.
+        </div>
+    </div>
+    
+    <div class="productContainer">
+        <div class="product">
+        <h1>Area Rug Cleaning Services <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.AreaRugCleaningProducts'));" >+ Expand</a></h1>
+        <table id="areaRugTable" cellpadding="0" cellspacing="0" border="0" class="AreaRugCleaningProducts" style="display:none">
+            <tr>
+                <td>
+                    <label>Length {!"&"} width (feet)</label>
+                </td>
+                <th>
+                    <label>Clean</label>
+                </th>
+                <th>
+                    <label>3M Scotchguard &#8482;</label>
+                </th>
+            </tr>
+            <tr class="areaRug">
+                <td>
+                    <input type="number" min="0" max="99" class="length"/> x <input type="number" min="0" max="99" class="width" taborder="0"/>
+                    <input type="hidden" class="AREA_RUG_CLEANING_CLEAN_AREA_RUG" value="0"/>
+                    <input type="hidden" class="AREA_RUG_CLEANING_PROTECT_AREA_RUG" value="0"/>
+                </td>
+                <td>
+                    <input type="checkbox" class="clean"/>
+                </td>
+                <td>
+                    <input type="checkbox" class="protect"/>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <a href="javascript:void(0);" onclick="ServiceMaster.AddRug()">+ Rug</a>
+                    <script>
+                        //<!-- Get the second row and create an area rug object out of it -->
+                        ServiceMaster.SelectedProducts.rugs.push(new ServiceMaster.AreaRug({row:$('.areaRug')}));
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="fineprint" style="display:none">
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure <a href="javascript:void(0)">dolor in reprehenderit in voluptate</a> velit esse cillum dolore eu fugiat nulla pariatur.
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div class="productInfo AreaRugCleaningProducts" style="display:none">
+            • Area Rugs: Area rugs are taken back to the Servicemaster office and cleaned there. They are returned within 10 working days. 
+        </div>
+    </div>
+    
+    <div class="productContainer">
+        <div class="product">
+        <h1>Air Duct Cleaning Services <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.AirDuctCleaningProducts'));" >+ Expand</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" class="AirDuctCleaningProducts" style="display:none">
+            <tr>
+                <th>
+                    <label class="right-align"># of Furnaces/HVAC</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="AIR_DUCT_CLEANING_CLEAN_FURNACEHVAC" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['AIR_DUCT_CLEANING_CLEAN_FURNACEHVAC']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["AIR_DUCT_CLEANING_CLEAN_FURNACEHVAC"] = new ServiceMaster.Product({config:'AIR_DUCT_CLEANING_CLEAN_FURNACEHVAC',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Clean dryer vent</label>
+                </th>
+                <td class="dryerVent">
+                    <input type="checkbox" class="clean"/>
+                    <input type="hidden" value="0" class="AIR_DUCT_CLEANING_CLEAN_DRYER_VENT"/>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" class="fineprint" style="display:none">
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure <a href="javascript:void(0)">dolor in reprehenderit in voluptate</a> velit esse cillum dolore eu fugiat nulla pariatur.
+                </td>
+            </tr>
+        </table>
+        <script>
+            ServiceMaster.SelectedProducts.dryerVent.push(new ServiceMaster.DryerVent({element:$('.dryerVent')}));
+        </script>
+        </div>
+        <div class="productInfo AirDuctCleaningProducts" style="display:none">
+            • Final confirmation of Duct Cleaning we will made after your order is placed
+        </div>
+    </div>
+    
+    <div class="productContainer">
+        <div class="product">
+        <h1>Tile {!"&"} Grout Cleaning <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.TileAndGroutCleaningProducts'));" >+ Expand</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" class="TileAndGroutCleaningProducts" style="display:none">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Tile Clean</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Room</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ROOM"] = new ServiceMaster.Product({config:'TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Bath/Laundry</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM"] = new ServiceMaster.Product({config:'TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Entryway</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY"] = new ServiceMaster.Product({config:'TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Staircase</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS"] = new ServiceMaster.Product({config:'TILE__GROUT_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div class="productInfo TileAndGroutCleaningProducts" style="display:none">
+            • In Home Estimate
+            <br/><br/>
+            • Tile {!"&"} Grout Cleaning is available for $2.00 per square foot.
+            <br/><br/>
+            • Select the areas you would like to have cleaned.
+            <br/><br/>
+            • Estimate will show a cost please disregard there is no charge for an in-home estimate.
+        </div>
+    </div>
+   
+    <div class="productContainer">
+        <div class="product">
+        <h1>Hardwood Floor Cleaning <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.HardwoodFloorCleaningProducts'));" >+ Expand</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" class="HardwoodFloorCleaningProducts" style="display:none">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Hardwood Floor Clean</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Room</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ROOM"] = new ServiceMaster.Product({config:'HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Bath/Laundry</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM"] = new ServiceMaster.Product({config:'HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_BATHROOM',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Entryway</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY"] = new ServiceMaster.Product({config:'HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_ENTRYWAY',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Staircase</label>
+                </th>
+                <td>
+                    <apex:selectList styleClass="HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS"] = new ServiceMaster.Product({config:'HARDWOOD_FLOOR_CLEANING_CLEAN_FREE_ESTIMATE_STAIRS',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div class="productInfo HardwoodFloorCleaningProducts" style="display:none">
+            • Hardwood Floor Cleaning is available for $1.50 per square foot
+            <br/><br/>
+            • Select the areas you would like to have cleaned.
+            <br/><br/>
+            • Estimate will show a cost please disregard there is no charge for an in-home estimate
+        </div>
+    </div>
+    
+    <div class="productContainer">
+        <div class="product">
+        <h1>Gutter Cleaning <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.GutterCleaningProducts'));" >+ Expand</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" class="GutterCleaningProducts" style="display:none">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Clean</label>
+                </th>
+                <th>
+                    <label>Ext. Clean</label>
+                </th>
+                <th>
+                    <label>Roof Blowing</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Small House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">1000 to 1900 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_EXTERIOR_GUTTERS_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_EXTERIOR_GUTTERS_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_EXTERIOR_GUTTERS_SMALL_HOUSE_1000_TO_1900_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_EXTERIOR_GUTTERS_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_EXTERIOR_GUTTERS_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_ROOF_BLOWING_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_ROOF_BLOWING_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_ROOF_BLOWING_SMALL_HOUSE_1000_TO_1900_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_ROOF_BLOWING_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_ROOF_BLOWING_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Medium House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">1900 to 2800 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_EXTERIOR_GUTTERS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_EXTERIOR_GUTTERS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_EXTERIOR_GUTTERS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_EXTERIOR_GUTTERS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_EXTERIOR_GUTTERS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_ROOF_BLOWING_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_ROOF_BLOWING_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_ROOF_BLOWING_MEDIUM_HOUSE_1900_TO_2800_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_ROOF_BLOWING_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_ROOF_BLOWING_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Large House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">2800 to 3600 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_EXTERIOR_GUTTERS_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_EXTERIOR_GUTTERS_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_EXTERIOR_GUTTERS_LARGE_HOUSE_2800_TO_3600_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_EXTERIOR_GUTTERS_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_EXTERIOR_GUTTERS_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="GUTTER_CLEANING_ROOF_BLOWING_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['GUTTER_CLEANING_ROOF_BLOWING_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.GUTTER_CLEANING_ROOF_BLOWING_LARGE_HOUSE_2800_TO_3600_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["GUTTER_CLEANING_ROOF_BLOWING_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'GUTTER_CLEANING_ROOF_BLOWING_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+
+        </table>
+        </div>
+        <div class="productInfo GutterCleaningProducts" style="display:none">
+            • Houses Over 3600 Sq Ft By Estimate Please Contact Our Office
+            <br/><br/>
+            • Exterior Gutter Cleaning Is The Outside Of The Gutter
+        </div>
+    </div>
+    
+        <div class="productContainer">
+        <div class="product">
+        <h1>Window Cleaning <a href="#" class="containerCollapse" onclick="Javascript:ServiceMaster.ExpandContract($(this),$('.WindowCleaningProducts'));" >+ Expand</a></h1>
+        <table cellpadding="0" cellspacing="0" border="0" class="WindowCleaningProducts" style="display:none">
+            <tr>
+                <td></td>
+                <th>
+                    <label>Ext. Windows</label>
+                </th>
+                <th>
+                    <label>Glass Panels</label>
+                </th>
+                <th>
+                    <label>Skylights</label>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Small House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">1000 to 1900 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.WINDOW_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_CLEAN_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_GLASS_PANELS_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_GLASS_PANELS_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_GLASS_PANELS_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_GLASS_PANELS_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_SKYLIGHTS_SMALL_HOUSE_1000_TO_1900_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_SKYLIGHTS_SMALL_HOUSE_1000_TO_1900_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_SKYLIGHTS_SMALL_HOUSE_1000_TO_1900_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_SKYLIGHTS_SMALL_HOUSE_1000_TO_1900_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Medium House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">1900 to 2800 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.WINDOW_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_CLEAN_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_GLASS_PANELS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_GLASS_PANELS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_GLASS_PANELS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_GLASS_PANELS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_SKYLIGHTS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_SKYLIGHTS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_SKYLIGHTS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_SKYLIGHTS_MEDIUM_HOUSE_1900_TO_2800_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    <label class="right-align">Large House</label>
+                    <div style="font-style:italic;font-weight:100;color:#CDCDCD">2800 to 3600 Sq Ft</div>
+                </th>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        $('.WINDOW_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT').find('option').not(function(pIndex){
+                            return pIndex<2;
+                        }).remove();
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_CLEAN_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_GLASS_PANELS_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_GLASS_PANELS_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_GLASS_PANELS_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_GLASS_PANELS_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+                <td>
+                    <apex:selectList styleClass="WINDOW_CLEANING_SKYLIGHTS_LARGE_HOUSE_2800_TO_3600_SQ_FT" size="1" multiselect="false">
+                        <apex:selectOptions value="{!ProductSelects['WINDOW_CLEANING_SKYLIGHTS_LARGE_HOUSE_2800_TO_3600_SQ_FT']}"></apex:selectOptions>
+                    </apex:selectList>
+                    <script>
+                        ServiceMaster.SelectedProducts.standard["WINDOW_CLEANING_SKYLIGHTS_LARGE_HOUSE_2800_TO_3600_SQ_FT"] = new ServiceMaster.Product({config:'WINDOW_CLEANING_SKYLIGHTS_LARGE_HOUSE_2800_TO_3600_SQ_FT',onchange:myonchange});
+                    </script>
+                </td>
+            </tr>
+
+        </table>
+        </div>
+        <div class="productInfo WindowCleaningProducts" style="display:none">
+            • Houses Over 3600 Sq Ft By Estimate Please Contact Our Office
+            <br/><br/>
+            • Window Cleaning Is For Exterior Windows
+        </div>
+    </div>
+    
+    
+    
+    
+</div><!-- END CONTENT_LEFT -->
+
+<div>
+    <div id="content_middle">
+    </div>
+    <div id="content_right">
+        <span class="scheduleContainer" style="display:none">
+            <h1 class="scheduleHeader">Your Date/Time</h1>
+            <apex:outputPanel layout="block" styleClass="schedule summaryInfo">
+                <a href="javascript:void(0)" onclick="ServiceMaster.ChangeSchedule()" class="modifyAction">Edit Date/Time</a>
+                <div class="dateTime"/>
+            </apex:outputPanel>
+        </span>
+        <span class="quoteContainer" style="display:none">
+            <h1 class="quoteHeader">Your Quote</h1>
+            <apex:outputPanel layout="block" styleClass="quote summaryInfo">
+                <div class="messages info" style="display:none"/>
+                <table class="bill">
+                </table>
+                <input type="text" id="couponcode" placeholder="Coupon Code" onkeypress="if(event.keyCode == 13){event.preventDefault();ServiceMaster.CouponCode.apply();}"/> <input type="button" class="couponcode" value="Apply" onclick="ServiceMaster.CouponCode.apply()"/>
+                <div class="messages error" style="display:none"/>
+            </apex:outputPanel>
+            <input type="button" value="Continue ►" onclick="ServiceMaster.StepHandler.toStep2()"/> &nbsp; <a href="javascript:void(0)" onclick="ServiceMaster.ClearQuote()" class="modifyAction">Clear Quote</a>
+            
+        </span>
+    </div>
+</div><!-- End middle and right -->
+</div><!-- end #content div -->
+<div id="footer">
+
+</div>
+</apex:form>
+
+</apex:page>

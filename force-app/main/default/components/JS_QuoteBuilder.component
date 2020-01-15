@@ -1,0 +1,1170 @@
+<apex:component >
+<script>
+//<!-- Create a namespace -->
+var ServiceMaster = {};
+
+//<!-- PRODUCT SELECTS -->
+//<!-- The General Product objects are stored here to easily loop through them all -->
+ServiceMaster.SelectedProducts = {
+    standard : {}, //<!-- Standard products using select inputs - mapped by their product config -->
+    rugs : [], //<!-- Specific to area rugs -->
+    dryerVent : [] //<!-- the dryer vent object has a single checkbox input -->
+};
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- PRODUCT ----------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- p.config - string - the config key of the product -->
+//<!-- p.onchange - function - the function to call when the value is set-->
+//<!-- p.value - string - the value of the product, being id-quantity -->
+ServiceMaster.Product = function(p){
+    var _config = p.config;
+    Object.defineProperty(this,'config',{
+        get : function(){
+            return _config;
+        }
+    });
+    var _onchange = p.onchange;
+    var _elements = {input : p.element};
+    
+    //<!-- VALUE -->
+    //<!-- Our value is stored as an object with an "id" and "quantity" property -->
+    var _value = {};
+    Object.defineProperty(this,'value',{
+        get : function(){
+            return _value;
+        },
+        //<!-- if we are set with a string: we will parse the string to our object -->
+        //<!-- if we are set with an object: we will concat the object, and set the value inside our element (if available) -->
+        set : function(p){
+            console.log('ServiceMaster.Product.value.set ENTERED for ' + _config + ' with: ' + JSON.stringify(p));
+            _value = {};
+            if(typeof(p) == 'object') {
+                _value.id = p.id || null;
+                _value.quantity = p.quantity || null;
+                //<!-- we will also set the value in our input -->
+                if(_elements.input != null) {
+                    if(_value.id != null && _value.quantity != null) {
+                        _elements.input.val(_value.id + '-' + _value.quantity);
+                    } else {
+                        _elements.input.val('0');
+                    }
+                }
+            }
+            console.log('ServiceMaster.Product.value.set _value is: ' + JSON.stringify(_value));
+            onchange.bind(this)(); //<!-- we call the on change to kick off some more workflow -->
+            return _value;
+        }
+    });
+    
+    //<!-- PRODUCT -->
+    //<!-- Gets the product record from the list, or null if not selected -->
+    var getProduct = function(){
+        var p = null;
+        var v = this.value;
+        if(v != null) {
+            p = ServiceMaster.ProductIds[v.id];
+        }
+        //console.log('ServiceMaster.Product.getProduct: ' + JSON.stringify(p));
+        return p;
+    }.bind(this);
+    
+    //<!-- GET ORDER LINE -->
+    //<!-- Returns a JSON serialized OrderLineItem__c if available, or null if not -->
+    this.getOrderLine = function(){
+        var line = null;
+        //<!-- We must have a value -->
+        var v = this.value;
+        var p = getProduct();
+        if(p != null) {
+            //<!-- If the Product itself has quantities listed - we do not need to multiply the price for the user -->
+            line = {
+                Product__c : v.id,
+                Product__r : ServiceMaster.ProductIds[v.id],
+                Quantity__c : v.quantity,
+                Price__c : p.Quantity__c == null ? p.Price__c * v.quantity : p.Price__c,
+                attributes : {type:'OrderLineItem__c'}
+            };
+        }
+        return line;
+    }
+    
+    //<!-- ON CHANGE -->
+    var onchange = function(){
+        //<!--  call our onchange function if needed -->
+        if(_onchange != null && typeof(_onchange) === 'function'){
+            _onchange();
+        }
+    }.bind(this);
+    
+    //<!-- GET ELEMENT -->
+    //<!-- Finds the element and builds the on change functions in to it -->
+    var getElement = function(){
+        if(_elements.input == null) {
+            //<!-- Locate an element with the class in the same name as the _config -->
+            //<!-- If we are an Area Rug product, then we will also instantiate an area rug object -->
+            var e = $('.' + _config);
+            _elements.input = e.length > 0 ? e : null;
+            //console.log('ServiceMaster.Product.getElement: got element length: ' + e.length);
+        }
+        //<!-- Assuming we've found one - we can proceed to tell the html input to set the value with what it has -->
+        if(_elements.input != null && _elements.input.length > 0){
+            _tagType = _elements.input.get(0).tagName;
+            _type = _elements.input.attr('type');
+            
+            //console.log("TAGTYPE: " + _tagType + ", TYPE:" + _type);
+            var _that = this;
+            
+            if(_tagType == 'INPUT' && _type == 'checkbox'){
+                _elements.input.change(function(){
+                    var isChecked = $(this).is(':checked');
+                    if(isChecked){
+                        _that.value = {};
+                    } else {
+                        v = v.split('-'); //<!-- values are stored with id-quantity as a string -->
+                        if(v.length == 2){
+                            var x = parseFloat(v[1]);
+                            if(!isNaN(x)){
+                                _that.value = {id:v[0], quantity:x};
+                            }
+                        }
+                    }
+                });
+            } else {
+                _elements.input.change(function(){
+                    var v = $(this).val();
+                    if(v == '0'){
+                        _that.value = {};
+                    } else {
+                        v = v.split('-'); //<!-- values are stored with id-quantity as a string -->
+                        if(v.length == 2){
+                            var x = parseFloat(v[1]);
+                            if(!isNaN(x)){
+                                _that.value = {id:v[0], quantity:x};
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }.bind(this);
+    
+    //<!-- ADDITIONAL CONSTRUCTION -->
+    console.log('ServiceMaster.Product ENTERED with: config: ' + p.config + ', onchange: ' + (typeof(p.onchange) === 'function') + ', element: ' + p.element);
+    //<!-- get the element -->
+    getElement();
+    //<!-- If we have been constructed with a value - then we must set that value in our element -->
+    if(p.value != null && typeof(p.value) == 'object'){
+        this.value = p.value;
+    }
+}
+
+function myonchange(){
+    console.log('myonchange called');
+    ServiceMaster.QuoteCalculator.output();
+    ServiceMaster.ScheduleOutput.output();
+    ServiceMaster.Cookies.recordCookie();
+}
+
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- DRYER VENT -------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- the dryer vent product is shown to the user as a checkbox that really just means 1 quantity or 0 quantity -->
+//<!-- it is either constructed with a boolean (for checked/unchecked as stored in cookie) or null (for new instantiation from DOM) -->
+ServiceMaster.DryerVent = function(p){
+    //<!-- Pass in JQUERY Element that contains the descendent inputs -->
+    var _isClean = p.element.find('.clean');
+    var _clean = p.element.find('.AIR_DUCT_CLEANING_CLEAN_DRYER_VENT');
+    
+    //<!-- we don't need to push these to the ServiceMaster.SelectedProducts.standard map because area rugs go into the ServiceMaster.SelectedProducts.dryerVent array -->
+    var _product = new ServiceMaster.Product({config:'AIR_DUCT_CLEANING_CLEAN_DRYER_VENT', element: _clean, onchange:myonchange});
+
+    this.getProduct = function(){
+        return _product;
+    }
+
+    //<!-- ON CHANGE -->
+    //<!-- When any of the field values change, we need to populate our hidden inputs with the expected format of the -->
+    //<!--    GeneralProduct object: 'id-qty' -->
+    var onchange = function(){
+        _clean.val('0');
+        var c = isClean();
+        //console.log('ServiceMaster.DryerVent.onchange: quantity: ' + q + ', clean: ' + c);
+        if(c) {
+            _clean.val(ServiceMaster.Products.AIR_DUCT_CLEANING_CLEAN_DRYER_VENT[0].Id + '-1');
+        }
+
+        _clean.change();
+    }.bind(this);
+    
+    function isClean(){
+        return _isClean.prop('checked') === true;
+    }
+    
+    //<!-- GET ORDER LINE -->
+    //<!-- Call the function from the nested Product object and get their order lines -->
+    this.getOrderLine = function(){
+        var a = _product.getOrderLine();
+        var b = null;
+        if(a != null) {
+            b = a;
+        }
+        //console.log('ServiceMaster.DryerVent.getOrderLine: ' + JSON.stringify(b));
+        return b;
+    }
+    
+    //<!-- checked -->
+    Object.defineProperty(this,'checked',{
+        get : function(){
+            return isClean.bind(this)();
+        }
+    });
+    
+    //<!-- ADDITIONAL CONSTRUCTION -->
+    //<!-- bind our change events -->
+    _isClean.change(function(){
+        onchange();
+    }.bind(this));
+    
+    //<!-- If we are constructed with values (eg from a acookie) then we will populate our inputs with those values -->
+    if(p.value != null) {
+        _isClean.prop('checked',p.value);
+        //<!-- In addition, we will call an on change to kick things off -->
+        onchange();
+    }
+}
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- AREA RUG  --------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- This is basically a wrapper around our General Product that manually determines the "value" of an input field -->
+//<!--     to mimic the value that is expected from the Product object -->
+ServiceMaster.AreaRug = function(p){
+    //<!-- Pass in JQUERY Element of the table row containing all required inputs -->
+    var _tr = p.row;
+    var _length = _tr.find('.length');
+    var _width = _tr.find('.width');
+    var _isClean = _tr.find('.clean');
+    var _isProtect = _tr.find('.protect');
+    var _clean = _tr.find('.AREA_RUG_CLEANING_CLEAN_AREA_RUG');
+    var _protect = _tr.find('.AREA_RUG_CLEANING_PROTECT_AREA_RUG');
+    
+    //<!-- we don't need to push these to the ServiceMaster.SelectedProducts.standard map because area rugs go into the ServiceMaster.SelectedProducts.rugs array -->
+    var _product_c = new ServiceMaster.Product({config:'AREA_RUG_CLEANING_CLEAN_AREA_RUG', element: _clean, onchange:myonchange});
+    var _product_p = new ServiceMaster.Product({config:'AREA_RUG_CLEANING_PROTECT_AREA_RUG', element: _protect, onchange:myonchange});
+
+    //<!-- ON CHANGE -->
+    //<!-- When any of the field values change, we need to populate our hidden inputs with the expected format of the -->
+    //<!--    GeneralProduct object: 'id-qty' -->
+    var onchange = function(){
+        _clean.val('0');
+        _protect.val('0');
+        var q = getQuantity();
+        var c = isClean();
+        var p = isProtect();
+        //console.log('ServiceMaster.AreaRug.onchange: quantity: ' + q + ', clean: ' + c + ', protect: ' + p);
+        if(q > 0) {
+            //<!-- As long as we have a quantity, and we have at least a clean or protect: we can find the value -->
+            if(c) {
+                _clean.val(ServiceMaster.Products.AREA_RUG_CLEANING_CLEAN_AREA_RUG[0].Id + '-' + q);
+            }
+            if(p){
+                _protect.val(ServiceMaster.Products.AREA_RUG_CLEANING_PROTECT_AREA_RUG[0].Id + '-' + q);
+            }
+        }
+        
+        _clean.change();
+        _protect.change();
+    }.bind(this);
+    
+    function isClean(){
+        return _isClean.prop('checked') === true;
+    }
+    function isProtect(){
+        return _isProtect.prop('checked') === true;
+    }
+    
+    //<!-- GET QUANTITY -->
+    //<!-- Gets the area of the rug if able -->
+    function getQuantity(){
+        var a = _length.val()*_width.val();
+        if(isNaN(a)) {
+            a = 0;
+        }
+        return a;
+    }
+    
+    //<!-- GET ORDER LINE -->
+    //<!-- Call the function from the nested Product object and get their order lines -->
+    //<!-- returns an array that may be empty -->
+    this.getOrderLines = function(){
+        var c = _product_c.getOrderLine();
+        var p = _product_p.getOrderLine();
+        var a = [];
+        if(c != null) {
+            a.push(c);
+        }
+        if(p != null) {
+            a.push(p);
+        }
+        //<!-- If we have at least one line - we need a handling fee -->
+        if(p != null ||c != null) {
+            a.push({
+                Description__c : 'Area Rug Handling fee',
+                Price__c : ServiceMaster.ConfigMap['AREA_RUG_HANDLING_FEE'],
+                Quantity__c : 1,
+                attributes : {type:'OrderLineItem__c'}  
+            });
+        }
+        //console.log('ServiceMaster.AreaRug.getOrderLines: ' + JSON.stringify(a));
+        return a;
+    }
+    
+    //<!-- GET RUG -->
+    //<!-- Returns a JS object of the Area rug so we can store it in cookies -->
+    this.getRug = function(){
+        var o = {
+            length:_length.val(),
+            width:_width.val(),
+            isClean : isClean(),
+            isProtect : isProtect()
+        };
+        return o;
+    }
+    
+    //<!-- ADDITIONAL CONSTRUCTION -->
+    //<!-- bind our change events -->
+    _length.change(function(){
+        onchange();
+    }.bind(this));
+    _width.change(function(){
+        onchange();
+    }.bind(this));
+    _isClean.change(function(){
+        onchange();
+    }.bind(this));
+    _isProtect.change(function(){
+        onchange();
+    }.bind(this));
+    
+    //<!-- If we are constructed with values (eg from a acookie) then we will populate our inputs with those values -->
+    if(p.rug != null) {
+        _length.val(p.rug.length);
+        _width.val(p.rug.width);
+        _isClean.prop('checked',p.rug.isClean);
+        _isProtect.prop('checked',p.rug.isProtect);
+        //<!-- In addition, we will call an on change to kick things off -->
+        onchange();
+    }
+}
+
+//<!-- ADD RUG -->
+//<!-- Adds a rug to the table where the area rugs are -->
+//<!-- instantiates the wrapper class -->
+ServiceMaster.AddRug = function(){
+    var tr = ServiceMaster.GetRugRow();
+    ServiceMaster.SelectedProducts.rugs.push(new ServiceMaster.AreaRug({row:tr}));
+}
+
+//<!-- GET RUG ROW -->
+//<!-- Gets a new set of jquery elements for an area rug -->
+ServiceMaster.GetRugRow = function(){
+    var rows = $('#areaRugTable').find('tr');
+    var row = rows.eq(rows.length-2); //<!-- The rows of rugs start 2 rows before the end -->
+    
+    var tr = $(document.createElement('tr')).attr('class','areaRug');
+    var td1 = $(document.createElement('td'));
+    var len = $(document.createElement('input')).attr('type','number').attr('min','0').attr('max','99').attr('class','length').attr('value','0');
+    var wid = $(document.createElement('input')).attr('type','number').attr('min','0').attr('max','99').attr('class','width').attr('value','0');
+    var clean = $(document.createElement('input')).attr('type','hidden').attr('class','AREA_RUG_CLEANING_CLEAN_AREA_RUG');
+    var protect = $(document.createElement('input')).attr('type','hidden').attr('class','AREA_RUG_CLEANING_PROTECT_AREA_RUG');
+    var td2 = $(document.createElement('td'));
+    var c = $(document.createElement('input')).attr('type','checkbox').attr('class','clean');
+    var td3 = $(document.createElement('td'));
+    var p = $(document.createElement('input')).attr('type','checkbox').attr('class','protect');
+    tr.append(td1.append(len).append(' x ').append(wid).append(clean).append(protect)).append(td2.append(c)).append(td3.append(p));
+    row.before(tr);
+    
+    //len.focus();
+    return tr; //<!-- we return the ROW we've created -->
+}
+
+//<!-- CLEAR RUGS -->
+//<!-- Clears out all rugs from the system - needed to handle addition of rugs from the cookies -->
+ServiceMaster.ClearRugs = function(){
+    ServiceMaster.SelectedProducts.rugs = [];
+    //<!-- Find the row in the dom, and remove it -->
+    $('#areaRugTable').find('.areaRug').remove();
+}
+
+//<!-- GET DRYER VENT HTML -->
+ServiceMaster.GetDryerVentHTML = function(){
+    var rows = $('#airDuct').find('tr');
+    var tr = rows.eq(rows.length-2);
+    var td = $(document.createElement('td')).attr('class','dryerVent');
+    var cb = $(document.createElement('input')).attr('class','clean').attr('type','checkbox');
+    var inp = $(document.createElement('input')).attr('class','AIR_DUCT_CLEANING_CLEAN_DRYER_VENT').attr('type','hidden');
+    tr.append(td.append(cb).append(inp));
+    return td;
+}
+
+//<!-- CLEAR DRYER VENTS -->
+//<!-- Clears out all dryer vents from the system - needed to handle addition of dryer vents from the cookies -->
+ServiceMaster.ClearDryerVents = function(){
+    ServiceMaster.SelectedProducts.dryerVent = [];
+    $('.dryerVent').remove();
+}
+
+//<!-- CLEAR ALL -->
+//<!-- Clears the quote, and refreshes the page -->
+ServiceMaster.ClearQuote = function(){
+    ServiceMaster.Cookies.set('serviceMaster_quote','');
+    ServiceMaster.Cookies.set('serviceMaster_couponcode','');
+    ServiceMaster.StepHandler.toStep1();
+}
+
+//<!-- EDIT QUOTE -->
+//<!-- Navigates back to the quote modification page -->
+ServiceMaster.EditQuote = function(){
+    ServiceMaster.StepHandler.toStep1();
+}
+
+//<!-- CHANGE SCHEDULE -->
+//<!-- Navigates tot eh schedule page -->
+ServiceMaster.ChangeSchedule = function(){
+    ServiceMaster.StepHandler.toStep3();
+}
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- EXPAND CONTRACT SECTION ------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+
+
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- QUOTE CALCULATOR -------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- Calculates the values for the quote -->
+ServiceMaster.QuoteCalculator = new function(){
+    //<!-- SELECTED ORDER LINES -->
+    //<!-- Gets all order lines from the users selected products - this is not the same as the ones in the quote (because of possible additinal fees etc) -->
+    this.getSelectedOrderLines = function(){
+        var o = [];
+        //<!-- Push the standard products -->
+        for(var n in ServiceMaster.SelectedProducts.standard) {
+            var a = ServiceMaster.SelectedProducts.standard[n].getOrderLine();
+            if(a != null) {
+                o.push(a);
+            }
+        }
+        //<!-- And the area rugs -->
+        for(var n in ServiceMaster.SelectedProducts.rugs){
+            var a = ServiceMaster.SelectedProducts.rugs[n].getOrderLines();
+            for(var i in a) {
+                o.push(a[i]);
+            }
+        }
+        //<!-- And the dryer vent options -->
+        for(var n in ServiceMaster.SelectedProducts.dryerVent){
+            var a = ServiceMaster.SelectedProducts.dryerVent[n].getOrderLine();
+            if(a != null) {
+                o.push(a);
+            }
+        }
+        return o;
+    }
+    
+    //<!-- GET TOTAL -->
+    this.getTotal = function(){
+        var q = getQuote();
+        var t = 0;
+        for(var n in q){
+            for(var o in _quote[n]){
+                //<!-- We will total the products that have a quantity - those without quantities are just for display purposes -->
+                if(_quote[n][o].Quantity__c != null && _quote[n][o].Quantity__c > 0){ 
+                    //>Figure out if we have a price there
+                    var price__c = _quote[n][o].Price__c;
+                    t += price__c != null && !isNaN(price__c) ? price__c : 0;
+                }
+            }
+        }
+        return t;
+    }
+
+    //<!-- GET QUOTE -->
+    var _quote = null;
+    function getQuote(){
+        if(_quote == null){ 
+            _quote = {};
+            var r = this.getSelectedOrderLines();
+            if(r.length > 0){
+                //<!-- First we will categorize all products as they exist into their record type headers -->
+                for(var o in r){
+                    //<!-- We may be looping through an erroneous order line - a handling fee for rugs for example lets ignore those -->
+                    if(r[o].Product__r != null){
+                        var rt = r[o].Product__r.RecordType.Name;
+                        if(_quote[rt] == null) {
+                            _quote[rt] = [];
+                        }
+                        _quote[rt].push(r[o]);
+                    }
+                    //<!-- If we are an erroneous line - we may be a handling for area rugs - and we need to manually place those in the right record tyep header -->
+                    if((r[o].Description__c||'').toUpperCase() == 'AREA RUG HANDLING FEE'){
+                        _quote['Area Rug Cleaning'].push(r[o]);
+                    }
+                }
+                
+                //<!-- Get the current total -->
+                var t = 0;
+                for(var n in _quote){
+                    for(var o in _quote[n]){
+                        //<!-- do not include sub total items -->
+                        if(_quote[n][o].Quantity__c != null && _quote[n][o].Quantity__c > 0) {
+                            var price = _quote[n][o].Price__c;
+                            t += price != null && !isNaN(price) ? price : 0;
+                        }
+                    }
+                }
+                //console.log('total before orders: ' + t);
+                
+                //<!-- We also want to see if the user has a coupon code available int eh cookies that we can apply -->
+                var co = ServiceMaster.CouponCode.getCookieValue();
+                if(co != null){
+                    //<!-- we need to get the total and apply the discount to it -->
+                    var price = ((co.DiscountPercent__c/100) * t) * -1;
+                    _quote['Coupon code'] = [{
+                        Price__c : price,
+                        Description__c : co.Name + ' ' + co.DiscountPercent__c + '% off',
+                        Quantity__c : 1,
+                        attributes : {type:'OrderLineItem__c'}
+                    }];
+                    //<!-- we will also append the new discounted amount to the total -->
+                    t += price
+                }
+                
+                
+                //<!-- Our minimum is either the minimum residential call price if there are no area rugs, or minimum area rug call price if there are -->
+                var m = _quote['Area Rug Cleaning'] != null ? ServiceMaster.ConfigMap['MINIMUM_CALL_FEE_AREA_RUG'] : ServiceMaster.ConfigMap['MINIMUM_CALL_FEE'];
+                //<!-- And finally if we dont meet the minimum - then top it up... -->
+                if(t < m) {
+                    _quote['Minimum Call Charge'] = [{
+                        Price__c : m-t,
+                        Description__c : 'Minimum call charge',
+                        Quantity__c : 1,
+                        attributes : {type:'OrderLineItem__c'}
+                    }];
+                    //<!-- And update the total -->
+                    t += m-t;
+                }
+                //console.log('total after minimum: ' + t);
+                
+                //<!-- We will add a fuel surcharge -->
+                //<!-- It will also be taxed -->
+                _quote['Fuel Surcharge'] = [{
+                    Price__c : 15.00,
+                    Description__c : 'Fuel surcharge',
+                    Quantity__c : 1,
+                    attributes : {type:'OrderLineItem__c'}
+                }];
+                t += _quote['Fuel Surcharge'][0].Price__c;
+                //console.log('total after fuel surcharge: ' + t);
+                
+                _quote['Subtotal'] = [{
+                    Price__c : t,
+                    attributes : {type:'OrderLineItem__c'}
+                }];
+                
+                //<!-- we can manually add the GST as well -->
+                _quote['Taxes'] = [{
+                    Price__c : t*0.05,
+                    Description__c : 'GST',
+                    Quantity__c : 1,
+                    attributes : {type:'OrderLineItem__c'}
+                }];
+            }
+        }
+        
+        console.log("QUOTE:");
+        console.log(_quote);
+        return _quote;
+    }
+    
+    //<!-- GET QUOTED ORDER LINES -->
+    //<!-- returns the order line items from the QUOTE after it has been calculated, and has had the fees/minimums applied -->
+    this.getQuoteOrderLines = function(){
+        var q = getQuote.bind(this)();
+        var a = [];
+        for(var n in q) {
+            for(var i in q[n]){
+                //<!-- We will NOT include any of the lines without Quantities - these are display only -->
+                if(q[n][i].Quantity__c != null && q[n][i].Quantity__c > 0){
+                    a.push(q[n][i]);
+                }
+            }
+        }
+        return a;
+    }
+    
+    //<!-- OUTPUT QUOTE -->
+    //<!-- update the display section -->
+    this.output = function(){
+        var table = $('.quoteContainer').find('.bill');
+        table.html(null);
+        _quote = null; //<!-- nul the quote to get it again -->
+        var q = getQuote.bind(this)();
+        
+        var t = this.getTotal();
+        //<!-- If we have a total - we want to see the quote - so lets determine if there is a dollar in there somewhere -->       
+        if(t > 0) {
+            $('.quoteContainer').show();
+            
+            //<!-- We will also add a notice regarding the minimum if it exists -->
+            var m = q['Area Rug Cleaning'] != null ? ServiceMaster.ConfigMap['MINIMUM_CALL_FEE_AREA_RUG'] : ServiceMaster.ConfigMap['MINIMUM_CALL_FEE'];
+            var currentMin = 0;//<!-- try and get the current minimum call charge if it exists -->
+            try {
+                currentMin = q['Minimum Call Charge'][0].Price__c;
+            } catch (e){
+                currentMin = 0;
+            }
+            if(t-currentMin < m) {
+                this.setMessage('Minimum Call charge. All calls must meet a minimum call charge of $125.00 plus tax. NOTE disregard for FREE ESTIMATES');
+            } else {
+                this.setMessage(null);
+            }
+            
+            //<!-- Find the bill table and rebuild it -->
+            table.append(getTotalRow(t));
+            for(var n in q) {
+                table.append(getSectionRow(n));
+                for(var o in q[n]){
+                    table.append(getProductRow(q[n][o]));
+                }
+            }
+            
+            table.append(getTotalRow(t));
+        } else {
+            $('.quoteContainer').hide();
+        }
+    }
+    
+    //<!-- GET SECTION ROW -->
+    //<!-- Gets the html for the "section" of a supplied string -->
+    function getSectionRow(p){
+        return '<tr class="sectionrow"><td colspan="4">' + p + '</td></tr>';
+    }
+    
+    //<!-- GET TOTAL ROW -->
+    //<!-- Gets the html for the total row from the passed in total decimal value -->
+    function getTotalRow(p){
+        return '<tr class="totalrow"><td><span class="bold">Total</span></td><td colspan="3"><span class="dollar bold">$' + p.toFixed(2) + '</span></td></tr>';
+    }
+
+    
+    //<!-- GET PRODUCT ROW -->
+    //<!-- Gets the product row html from the supplied order line item object -->
+    function getProductRow(p){
+        var tr = $(document.createElement('tr')).attr('class','productrow');
+        var tda = $(document.createElement('td'));
+
+        var tdb = $(document.createElement('td'));
+        //<!-- We either display the Service selected, or we display the description if applicable -->
+        var descr = p.Product__r != null ? p.Product__r.Service__c : p.Description__c != null ? p.Description__c : '';
+        tdb.html(descr);
+        
+        var tdc = $(document.createElement('td'));
+        //<!-- The quantity to display to the user may change - this is because the quantity may be hardcoded on the product, or variable -->
+        var q = p.Product__r != null && p.Product__r.Quantity__c != null ? p.Product__r.Quantity__c : p.Quantity__c != null ? p.Quantity__c : null;
+        
+        tdc.html(q != null ? q.toFixed(2) : '');
+        
+        //Find out if we have a price
+        var price__c = p.Price__c;
+        var priceText = price__c != null && !isNaN(price__c) ? '$' + price__c.toFixed(2) : "--";
+        var tdd = $(document.createElement('td')).append(
+            $(document.createElement('span')).attr('class','dollar').html(priceText)
+        );
+        
+        return tr.append(tda).append(tdb).append(tdc).append(tdd);
+    }
+    
+    //<!-- SET MESSAGE -->
+    //<!-- sets a message to the quote table -->
+    this.setMessage = function(p){
+        var m = $('.quoteContainer').find('.messages').eq(0);
+        if(m.length) {
+            if(p != null && p.trim() != '') {
+                m.html(null).html(p).show();
+            } else {
+                m.hide();
+            }
+        }
+    }
+    
+}();
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- COOKIES ----------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- A helper function to create/get cookies for us in the browser -->
+ServiceMaster.Cookies = new function(){
+    //<!-- GET COOKIE -->
+    //<!-- pass in the name of the cookie and get it back or null if it does not exist -->
+    this.get = function(p){
+        var cookie = null;
+        var name = p + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0; i<ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1);
+            if (c.indexOf(name) == 0) cookie = c.substring(name.length,c.length);
+        }
+
+        return cookie;
+    }
+    
+    //<!-- SET COOKIE -->
+    //<!-- puts a cookie to the browser -->
+    this.set = function(pName, pValue, pExpiry) {
+        var d = new Date();
+        d.setTime(d.getTime() + (pExpiry*24*60*60*1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = pName + "=" + pValue + "; " + expires;
+    }
+    
+    //<!-- RECORD INPUTS -->
+    //<!-- Takes all the input fields, and records their class designations (product configs) against against their values -->
+    this.recordCookie = function(){
+        var c = {standard:[],rugs:[],dryerVent:[]}; //<!-- We will store the products as an array of object with properties needed to re-construct a ServiceMaster.Product object, and ServiceMaster.AreaRug object -->
+        for(var n in ServiceMaster.SelectedProducts.standard){
+            var p = ServiceMaster.SelectedProducts.standard[n];
+            c.standard.push({
+                config : p.config,
+                value : p.value
+            });
+        }
+        for(var n in ServiceMaster.SelectedProducts.rugs){
+            var p = ServiceMaster.SelectedProducts.rugs[n];
+            if(p.getOrderLines().length > 0) {
+                c.rugs.push(p.getRug());
+            }
+        }
+        
+        for(var n in ServiceMaster.SelectedProducts.dryerVent){
+            var p = ServiceMaster.SelectedProducts.dryerVent[n];
+            c.dryerVent.push(p.checked);
+        }
+        
+        ServiceMaster.Cookies.set('serviceMaster_quote',JSON.stringify(c),1);
+    }
+    
+    //<!-- OUTPUT COOKIE -->
+    //<!-- We can output the values of the cookie by scanning it and updating the input fields -->
+    this.outputCookie = function(){
+        var c = this.get('serviceMaster_quote');
+        console.log('ServiceMaster.Cookies.outputCookie: returned cookie: ' + c);
+        if(c != null && c.trim() != '') {
+            c = JSON.parse(c);
+            
+            for(var n in c.standard) {
+                var p = c.standard[n];
+                //<!-- Now create a whole bunch of service master products -->
+                if(p.config != null && p.value != null && p.value.id != null && p.value.quantity != null) {
+                    ServiceMaster.SelectedProducts.standard[p.config] = new ServiceMaster.Product({
+                        config : p.config, value : p.value, onchange : myonchange
+                    });
+                }
+            }
+            //<!-- If we have area rugs, then we need to add a new row for each one -->
+            if(c.rugs.length > 0){
+                //<!-- But we need to clear the ones that are already in the system -->
+                ServiceMaster.ClearRugs();
+                //<!-- If we have rugs, then the first one in the list will be output on the area rug inputs that are there -->
+                for(var i = 0; i<c.rugs.length;i++) {
+                    var p = c.rugs[i];
+                    //<!-- Now create a whole bunch of service master Area Rugs -->
+                    ServiceMaster.SelectedProducts.rugs.push(new ServiceMaster.AreaRug({
+                        row : ServiceMaster.GetRugRow(),
+                        rug : c.rugs[i]
+                    }));
+                }
+            }
+            
+            if(c.dryerVent.length > 0) {
+                ServiceMaster.ClearDryerVents();
+                for(var i = 0; i < c.dryerVent.length; i++) {
+                    var p = c.dryerVent[i];
+                    //<!-- Now create a whole bunch of service master Dryer Vents -->
+                    ServiceMaster.SelectedProducts.dryerVent.push(new ServiceMaster.DryerVent({
+                        element : ServiceMaster.GetDryerVentHTML(),
+                        value : c.dryerVent[i]
+                    }));
+                }
+            }
+            myonchange();
+        }
+    }
+}();
+
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- SCHEDULE ---------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+ServiceMaster.Schedule = function(p){
+    _element = p.element;
+    _date = null; //<!-- The date the schedule is starting on -->
+    _bufferDays = 1; //<!-- The number of days from today onward that are NOT available for bookings -->
+    
+    Object.defineProperty(this,'startDate',{
+        get : function(){
+            if(_date == null) {
+                _date = new Date(new Date().setHours(0,0,0,0)); //<!-- we remove the time -->
+            }
+            return _date;
+        },
+        set : function(p){
+            if(p != null) {
+                if(p instanceof Date) {
+                    _date = new Date(p.setHours(0,0,0,0));   
+                }
+            } else if (p == null) {
+                _date = null;
+            }
+            buildHtml();
+        }
+    });
+    
+    //<!-- GET DATES -->
+    //<!-- Returns the list of dates - from the specified start date + 6 for a total of seven days -->
+    var getDates = function(){
+        var a = [];
+        a.push(this.startDate); //<!-- put the current start date in to the array -->
+        for(var i = 0; i < 6; i++) {
+            var d = new Date(this.startDate);
+            d = new Date(new Date(d.setDate(d.getDate() + (i+1))).setHours(0,0,0,0));
+            a.push(d);
+        }
+        return a;
+    }.bind(this);
+    
+    //<!-- GET DAY ABBR -->
+    //<!-- Pass in a date, and get back the day abbreviation -->
+    var getDayName = function(p){
+        var d = {0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat'};
+        return d[p.getDay()];
+    }.bind(this);
+
+    
+    //<!-- SELECT -->
+    //<!-- Gets passed a time slot id, and a date -->
+    var select = function(pId, pDate) {
+        console.log('ServiceMaster.Schedule.select: ' + pId + ', ' + pDate);
+        var d = ServiceMaster.getStringDate(pDate);
+        //<!-- We will store that in a cookie as well -->
+        ServiceMaster.Cookies.set('serviceMaster_dateTime',JSON.stringify({
+            'SELECTED_TIMESLOT_ID' : pId,
+            'SELECTED_DATE' : d
+        }),1);
+        ServiceMaster.ScheduleOutput.output();
+        af_setDateTime(pId, d);
+    }.bind(this);
+    
+    //<!-- NEXT WEEK -->
+    var nextWeek = function(){
+        this.startDate = new Date(this.startDate.setDate(this.startDate.getDate() + 7));
+    }.bind(this);
+
+    //<!-- PREVIOUS WEEK -->
+    var previousWeek = function(){
+        this.startDate = new Date(this.startDate.setDate(this.startDate.getDate() - 7));
+    }.bind(this);
+    
+    
+    //<!-- HTML -->
+    //<!-- Functions to get HTML for the table -->
+    var buildHtml = function(){
+        buildDateRow();
+        buildTimeSlotRows();
+    }.bind(this);
+    
+    //<!-- BUILD DATE ROW -->
+    var buildDateRow = function(){
+        var r = $(document.createElement('tr'));
+        r.append('<td class="label">&nbsp;</td>');
+        var d = getDates();
+        var m = {0:'Jan',1:'Feb',2:'Mar',3:'Apr',4:'May',5:'Jun',6:'Jul',7:'Aug',8:'Sep',9:'Oct',10:'Nov',11:'Dec'};
+        for(var n in d) {
+            r.append(
+                $(document.createElement('td')).attr('class','label').append(getDayName(d[n]) + ', ' + m[d[n].getMonth()] + ' ' + d[n].getDate() + ' ' + d[n].getFullYear())
+            );
+        }
+        //<!-- remove the 2nd row -->
+        _element.find('tr').eq(1).remove();
+        _element.find('tr').eq(0).after(r);
+    }.bind(this);
+    
+    //<!-- BUILD SELECTION ROW -->
+    var buildTimeSlotRows = function(){
+        var d = getDates();
+        _element.find('.timeslot').remove();
+        for(var n in ServiceMaster.TimeSlots){
+            var r = $(document.createElement('tr')).attr('class','timeslot').append(
+                $(document.createElement('td')).append(ServiceMaster.TimeSlots[n].Name).attr('class','label')
+            );
+            
+            for(var i in d) {
+                var td = getSelectorData(ServiceMaster.TimeSlots[n],d[i]);
+                r.append(td);
+            }
+            _element.append(r);
+        }
+    }.bind(this);
+    
+    //<!-- GET SELECTOR -->
+    //<!-- Gets a selector table data cell - will return a td with or without a selector based on if the time slots are open and other criteria -->
+    var getSelectorData = function(pTimeSlot,pDate) {
+        var td = $(document.createElement('td')).attr('class','available');
+        if(isValid(pTimeSlot,pDate)){
+            var radio = $(document.createElement('input')).attr('type','radio').attr('name','time');
+            radio.click(function(){
+                select(pTimeSlot.Id, pDate);
+            }.bind(this));
+            //<!-- we can also check that this is the one we have selected already -->
+            var s = ServiceMaster.ScheduleOutput.getCookieValue();
+            try {
+                var cd = s.SELECTED_DATE; //<!-- the cookie date -->
+                var d = ServiceMaster.getStringDate(pDate); //<!-- The current date -->
+                //console.log('ServiceMaster.Schedule.getSelectorData: got date from cookie: ' + cd + ', comparing to date: ' + d + ', ' + (cd == d));
+                if(s.SELECTED_TIMESLOT_ID == pTimeSlot.Id && cd == d) {
+                    radio.prop('checked','checked');
+                }
+            } catch (e){
+                console.log('ServiceMaster.Schedule.getSelectorData: failed to compare date: ' + e);
+            }
+            
+            td.append(radio);
+        } else {
+            td.attr('class','notavailable');
+        }
+        return td;
+    }.bind(this);
+    
+    //<!-- IS VALID -->
+    //<!-- Pass in a TimeSlot sObject, and a JS Date, and see if we are able to take another booking --> 
+    var isValid = function(pTimeSlot,pDate) {
+        var b = true;
+        //The buffer date is today plus the buffer days - eg: 1 extra business day
+        var bufferDate = new Date(new Date().setHours(0,0,0,0));
+        bufferDate.setDate(bufferDate.getDate() + _bufferDays);
+        
+        //<!-- If we are today, tomorrow, or we are a sunday - then we are NOT available -->
+        if(pDate <= bufferDate || getDayName(pDate) == 'Sun') {
+            b = false;
+        } else {
+            var orders = pTimeSlot != null && pTimeSlot.Orders__r != null && pTimeSlot.Orders__r.totalSize != null ? pTimeSlot.Orders__r.records : null;
+            var max = pTimeSlot.MaxBookings__c != null ? pTimeSlot.MaxBookings__c : null;
+            console.log('ServiceMaster.Schedule.isValid: got num order records: ' + (orders||[]).length + ' and max bookings: ' + max);
+            //<!-- If we have orders, and a max - we can continue -->
+            if(orders != null && max != null) {
+                //<!-- The date, as it would appear in an sObject field: YYYY-MM-DD -->
+                var date = ServiceMaster.getStringDate(pDate);
+                var bookings = 0; //<!-- Find the total bookings in the list that match our date -->
+                for(var n in orders) {
+                    console.log('ServiceMaster.Schedule.isValid: checking order date:' + orders[n].Date__c + ' against ' + date);
+                    bookings = orders[n].Date__c != null && orders[n].Date__c == date ? bookings+1 : bookings;
+                }
+                //<!-- and determine if we cannot proceed -->
+                if(bookings >= pTimeSlot.MaxBookings__c) {
+                    b = false;
+                }
+            }
+        }
+        return b;
+    }.bind(this);
+    
+    //<!-- ADDITIONAL CONTRUCTION -->
+    if(_element != null) {
+        var e = _element.find('.week');
+        e.eq(0).click(previousWeek.bind(this));
+        e.eq(1).click(nextWeek.bind(this));
+        buildHtml();
+    }
+}
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- SCHEDULE OUTPUT --------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- outputs the schedule information from the cookie similar to the QuoteCalculator -->
+ServiceMaster.ScheduleOutput = new function(){
+    
+    this.getCookieValue = function(){
+        var c = ServiceMaster.Cookies.get('serviceMaster_dateTime');
+        var v = null;
+        if(c != null && c.trim() != '') {
+            v = JSON.parse(c);
+        }
+        return v;
+    };
+    
+    var getTimeSlotName = function(p){
+        var s = null;
+        for(var n in ServiceMaster.TimeSlots){
+            var t = ServiceMaster.TimeSlots[n];
+            if(t.Id == p) {
+                s = t.Name;
+                break;
+            }
+        }
+        return s;
+    }.bind(this);
+    
+    this.output = function(){
+        var div = $('.scheduleContainer').find('.dateTime');
+        div.html(null);
+        var c = this.getCookieValue();
+        //<!-- If we have a cookie value - we want to see the datetime- so lets determine it -->       
+        if(c != null) {
+            $('.scheduleContainer').show();
+            div.html(
+                getTimeSlotName(c.SELECTED_TIMESLOT_ID) + ', ' + c.SELECTED_DATE
+            );
+        }
+    }
+}();
+
+
+//<!-- GET STRING DATE -->
+//<!-- A helper function to get a string date YYYY-MM-DD from the retarded js date object -->
+ServiceMaster.getStringDate = function(pDate){
+    var s = null;
+    var d = pDate != null && pDate instanceof Date ? pDate : new Date();
+    s = d.getFullYear() + '-' + ('00' + (d.getMonth() + 1)).slice(-2) + '-' + ('00' + d.getDate()).slice(-2);
+    return s;
+}
+
+
+
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- STEP HANDLER ------------------------------------------------------ -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- STEP HANDLER -->
+//<!-- This object handled the navigation between pages -->
+ServiceMaster.StepHandler = new function(){
+    //<!-- STEP 1 -->
+    this.toStep1 = function(){
+        document.activeElement.blur();
+        $.blockUI();
+        window.top.location = '/QuoteBuilder';
+    }
+    
+    
+    //<!-- STEP 2 -->
+    this.toStep2 = function(){
+        document.activeElement.blur();
+        if(ServiceMaster.QuoteCalculator.getTotal() > 0){
+            $.blockUI();
+            window.top.location = '/QuoteBuilder_account';
+        } else {
+            alert('You do not have any services selected');
+        }
+    }
+    
+    //<!-- STEP 3 -->
+    this.toStep3 = function(){
+        document.activeElement.blur();
+        
+        //<!-- Step 3 calls the action function "af_toStep3" which must be present on the page -->
+        if(typeof(af_toStep3) === 'function'){
+            af_toStep3();
+        } else {
+            $.blockUI();
+            //<!-- Otherwise - we just navigate to the schedule page -->
+            window.top.location = '/QuoteBuilder_schedule';
+        }
+    }
+    
+    //<!-- STEP 4 -->
+    this.toStep4 = function(){
+        document.activeElement.blur();
+        //<!-- we need to check that the user has selected a time slot -->
+        if(ServiceMaster.ScheduleOutput.getCookieValue() != null) {
+            $.blockUI();
+            window.top.location = '/QuoteBuilder_placeOrder';
+        } else {
+            alert('You must select a Date and Time Slot');
+            $.unblockUI();
+        }
+        
+    }
+    
+    this.submit = function(){
+        document.activeElement.blur();
+        var c = ServiceMaster.CouponCode.getCookieValue();
+        af_submit(JSON.stringify(ServiceMaster.QuoteCalculator.getQuoteOrderLines()), c != null ? c.Name : '');
+    }
+}();
+
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+//<!-- ------------------------------------------------------------- COUPON CODE ------------------------------------------------------- -->
+//<!-- --------------------------------------------------------------------------------------------------------------------------------- -->
+ServiceMaster.CouponCode = new function(){
+    this.message = null; //<!-- The message will be set here via an action function that rerenders a panel -->
+    //<!-- APPLY -->
+    //<!-- submit the request to find the coupon code -->
+    var apply = function(){
+        document.activeElement.blur();
+        //<!-- locate the input field, and pull out the value -->
+        var v = $('#couponcode').val();
+        setMessage();
+        if(v != null && v.trim() != '') {
+            ServiceMaster.Cookies.set('serviceMaster_couponcode','',0); //<!-- clear the current cookie -->
+            //<!-- submit the action function -->
+            ServiceMaster.af_getCouponCode(v.trim());
+        }
+    }.bind(this);
+    this.apply = function(){
+        apply();
+    }
+    //<!-- APPLY AFTER -->
+    //<!-- The action function will rerender a "scripts" panel and then this.message will be updated with the applicable message - interpret this to the user -->
+    this.applyAfter = function(){
+        console.log('ServiceMaster.CouponCode.applyAfter: got message: ' + JSON.stringify(this.message));
+        if(this.message != null){
+            if(this.message.message == 'invalid') {
+                setMessage('The code you entered has already been used.');
+            } else if(this.message.message == 'notfound') {
+                setMessage('The code you entered could not be found.');
+            } else if(this.message.message == 'success') {
+                ServiceMaster.Cookies.set('serviceMaster_couponcode',JSON.stringify(this.message.couponcode),1);
+                $('#couponcode').val(null); //<!-- we null the value -->
+            }
+            myonchange(); //<!-- We re display the quote to show the coupon code in there -->
+        }
+    }
+    
+    //<!-- GET COOKIE VALUE -->
+    //<!-- returns the coupon code from the cookie if available -->
+    this.getCookieValue = function(){
+        var c = ServiceMaster.Cookies.get('serviceMaster_couponcode');
+        return c != null && c.trim() != '' ? JSON.parse(c) : null;
+    }
+    
+    //<!-- SET MESSASGE -->
+    //<!-- Adds an error message, or removes it if supplied null -->
+    var setMessage = function(p){
+        var a = $('#couponcode');
+        var b = $('.messages').eq(1).html(null)
+        if(p != null) {
+            b.html('<b>Error: </b>' + p).show();
+            a.addClass('error');
+            
+        } else {
+            b.hide();
+            a.removeClass('error');
+        }
+    }.bind(this);
+}();
+
+</script>
+</apex:component>
